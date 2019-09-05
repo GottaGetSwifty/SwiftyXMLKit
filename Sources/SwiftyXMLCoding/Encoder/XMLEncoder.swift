@@ -380,219 +380,7 @@ fileprivate struct _XMLKeyedEncodingContainer<K : CodingKey> : KeyedEncodingCont
         self.container[_converted(key).stringValue] = NSNull()
     }
     
-    public mutating func encode(_ value: Bool, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: Int, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: Int8, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: Int16, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: Int32, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: Int64, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: UInt, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: UInt8, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: UInt16, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: UInt32, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: UInt64, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: String, forKey key: Key) throws {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = self.encoder.box(value)
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        default:
-            self.container[_converted(key).stringValue] = self.encoder.box(value)
-        }
-    }
-    
-    public mutating func encode(_ value: Float, forKey key: Key) throws {
-        // Since the float may be invalid and throw, the coding path needs to contain this key.
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        self.container[_converted(key).stringValue] = try self.encoder.box(value)
-    }
-    
-    public mutating func encode(_ value: Double, forKey key: Key) throws {
-        // Since the double may be invalid and throw, the coding path needs to contain this key.
+    private mutating func _encode<T: NSObjectable>(_ value: T, forKey key: Key) throws where T: Encodable {
         self.encoder.codingPath.append(key)
         defer { self.encoder.codingPath.removeLast() }
         switch self.encoder.options.attributeEncodingStrategy {
@@ -608,6 +396,21 @@ fileprivate struct _XMLKeyedEncodingContainer<K : CodingKey> : KeyedEncodingCont
             self.container[_converted(key).stringValue] = try self.encoder.box(value)
         }
     }
+    
+    public mutating func encode(_ value: Bool, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: Int, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: Int8, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: Int16, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: Int32, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: Int64, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: UInt, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: UInt8, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: UInt16, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: UInt32, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: UInt64, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: String, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: Float, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode(_ value: Double, forKey key: Key) throws { try _encode(value, forKey: key) }
     
     public mutating func encode<T : Encodable>(_ value: T, forKey key: Key) throws {
         self.encoder.codingPath.append(key)
@@ -687,34 +490,26 @@ fileprivate struct _XMLUnkeyedEncodingContainer : UnkeyedEncodingContainer {
     }
     
     // MARK: - UnkeyedEncodingContainer Methods
-    
+    private mutating func _encode<T: NSObjectable>(_ value: T) throws where T: Encodable {
+        self.encoder.codingPath.append(_XMLKey(index: self.count))
+        defer { self.encoder.codingPath.removeLast() }
+        self.container.add(try self.encoder.box(value))
+    }
     public mutating func encodeNil()             throws { self.container.add(NSNull()) }
-    public mutating func encode(_ value: Bool)   throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: Int)    throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: Int8)   throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: Int16)  throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: Int32)  throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: Int64)  throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: UInt)   throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: UInt8)  throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: UInt16) throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: UInt32) throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: UInt64) throws { self.container.add(self.encoder.box(value)) }
-    public mutating func encode(_ value: String) throws { self.container.add(self.encoder.box(value)) }
-    
-    public mutating func encode(_ value: Float)  throws {
-        // Since the float may be invalid and throw, the coding path needs to contain this key.
-        self.encoder.codingPath.append(_XMLKey(index: self.count))
-        defer { self.encoder.codingPath.removeLast() }
-        self.container.add(try self.encoder.box(value))
-    }
-    
-    public mutating func encode(_ value: Double) throws {
-        // Since the double may be invalid and throw, the coding path needs to contain this key.
-        self.encoder.codingPath.append(_XMLKey(index: self.count))
-        defer { self.encoder.codingPath.removeLast() }
-        self.container.add(try self.encoder.box(value))
-    }
+    public mutating func encode(_ value: Bool)   throws { try _encode(value) }
+    public mutating func encode(_ value: Int)    throws { try _encode(value) }
+    public mutating func encode(_ value: Int8)   throws { try _encode(value) }
+    public mutating func encode(_ value: Int16)  throws { try _encode(value) }
+    public mutating func encode(_ value: Int32)  throws { try _encode(value) }
+    public mutating func encode(_ value: Int64)  throws { try _encode(value) }
+    public mutating func encode(_ value: UInt)   throws { try _encode(value) }
+    public mutating func encode(_ value: UInt8)  throws { try _encode(value) }
+    public mutating func encode(_ value: UInt16) throws { try _encode(value) }
+    public mutating func encode(_ value: UInt32) throws { try _encode(value) }
+    public mutating func encode(_ value: UInt64) throws { try _encode(value) }
+    public mutating func encode(_ value: String) throws { try _encode(value) }
+    public mutating func encode(_ value: Float)  throws { try _encode(value) }
+    public mutating func encode(_ value: Double) throws { try _encode(value) }
     
     public mutating func encode<T : Encodable>(_ value: T) throws {
         self.encoder.codingPath.append(_XMLKey(index: self.count))
@@ -759,75 +554,25 @@ extension _XMLEncoder: SingleValueEncodingContainer {
         self.storage.push(container: NSNull())
     }
     
-    public func encode(_ value: Bool) throws {
+    private func _encode<T: NSObjectable>(_ value: T) throws where T: Encodable {
         assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
+        self.storage.push(container: try self.box(value))
     }
     
-    public func encode(_ value: Int) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: Int8) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: Int16) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: Int32) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: Int64) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: UInt) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: UInt8) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: UInt16) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: UInt32) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: UInt64) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: String) throws {
-        assertCanEncodeNewValue()
-        self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: Float) throws {
-        assertCanEncodeNewValue()
-        try self.storage.push(container: self.box(value))
-    }
-    
-    public func encode(_ value: Double) throws {
-        assertCanEncodeNewValue()
-        try self.storage.push(container: self.box(value))
-    }
+    public func encode(_ value: Bool) throws { try _encode(value) }
+    public func encode(_ value: Int) throws { try _encode(value) }
+    public func encode(_ value: Int8) throws { try _encode(value) }
+    public func encode(_ value: Int16) throws { try _encode(value) }
+    public func encode(_ value: Int32) throws { try _encode(value) }
+    public func encode(_ value: Int64) throws { try _encode(value) }
+    public func encode(_ value: UInt) throws { try _encode(value) }
+    public func encode(_ value: UInt8) throws { try _encode(value) }
+    public func encode(_ value: UInt16) throws { try _encode(value) }
+    public func encode(_ value: UInt32) throws { try _encode(value) }
+    public func encode(_ value: UInt64) throws { try _encode(value) }
+    public func encode(_ value: String) throws { try _encode(value) }
+    public func encode(_ value: Float) throws { try _encode(value) }
+    public func encode(_ value: Double) throws { try _encode(value) }
     
     public func encode<T : Encodable>(_ value: T) throws {
         assertCanEncodeNewValue()
@@ -835,56 +580,48 @@ extension _XMLEncoder: SingleValueEncodingContainer {
     }
 }
 
+internal protocol NSObjectable {
+    var asNSObject: NSObject { get }
+}
+extension Bool: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension Int: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension Int8: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension Int16: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension Int32: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension Int64: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension UInt: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension UInt8: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension UInt16: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension UInt32: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension UInt64: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension Float: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension Double: NSObjectable { var asNSObject: NSObject { NSNumber(value: self) } }
+extension String: NSObjectable { var asNSObject: NSObject { NSString(string: self) } }
+
 extension _XMLEncoder {
     /// Returns the given value boxed in a container appropriate for pushing onto the container stack.
-    fileprivate func box(_ value: Bool)   -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: Int)    -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: Int8)   -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: Int16)  -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: Int32)  -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: Int64)  -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: UInt)   -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: UInt8)  -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: UInt16) -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: UInt32) -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: UInt64) -> NSObject { return NSNumber(value: value) }
-    fileprivate func box(_ value: String) -> NSObject { return NSString(string: value) }
+    fileprivate func box<T: NSObjectable>(_ value: T) throws -> NSObject where T: Encodable { value.asNSObject }
     
-    internal func box(_ value: Float) throws -> NSObject {
+    private func _box<T: BinaryFloatingPoint>(_ value: T, infinity: T) throws -> NSObject where T: NSObjectable {
         if value.isInfinite || value.isNaN {
             guard case let .convertToString(positiveInfinity: posInfString, negativeInfinity: negInfString, nan: nanString) = self.options.nonConformingFloatEncodingStrategy else {
                 throw EncodingError._invalidFloatingPointValue(value, at: codingPath)
             }
             
-            if value == Float.infinity {
+            if value == infinity {
                 return posInfString as NSObject
-            } else if value == -Float.infinity {
+            } else if value == -infinity {
                 return negInfString as NSObject
             } else {
                 return nanString as NSObject
             }
         } else {
-            return NSNumber(value: value)
+            return value.asNSObject
         }
     }
     
-    internal func box(_ value: Double) throws -> NSObject {
-        if value.isInfinite || value.isNaN {
-            guard case let .convertToString(positiveInfinity: posInfString, negativeInfinity: negInfString, nan: nanString) = self.options.nonConformingFloatEncodingStrategy else {
-                throw EncodingError._invalidFloatingPointValue(value, at: codingPath)
-            }
-            
-            if value == Double.infinity {
-                return posInfString as NSObject
-            } else if value == -Double.infinity {
-                return negInfString as NSObject
-            } else {
-                return nanString as NSObject
-            }
-        } else {
-            return NSNumber(value: value)
-        }
-    }
+    internal func box(_ value: Float) throws -> NSObject { try _box(value, infinity: Float.infinity) }
+    internal func box(_ value: Double) throws -> NSObject { try _box(value, infinity: Double.infinity) }
     
     internal func box(_ value: Date) throws -> NSObject {
         switch self.options.dateEncodingStrategy {
@@ -936,14 +673,22 @@ extension _XMLEncoder {
     
     // This method is called "box_" instead of "box" to disambiguate it from the overloads. Because the return type here is different from all of the "box" overloads (and is more general), any "box" calls in here would call back into "box" recursively instead of calling the appropriate overload, which is not what we want.
     fileprivate func box_<T : Encodable>(_ value: T) throws -> NSObject? {
-        if T.self == Date.self || T.self == NSDate.self {
-            return try self.box((value as! Date))
-        } else if T.self == Data.self || T.self == NSData.self {
-            return try self.box((value as! Data))
-        } else if T.self == URL.self || T.self == NSURL.self {
-            return self.box((value as! URL).absoluteString)
-        } else if T.self == Decimal.self || T.self == NSDecimalNumber.self {
-            return (value as! NSDecimalNumber)
+        
+        // Should convert when Date or NSDate
+        if let valueAsDate = value as? Date {
+            return try self.box(valueAsDate)
+        }
+        // Should convert when Data or NSData
+        if let valueAsData = value as? Data {
+            return try self.box(valueAsData)
+        }
+        // Should convert when URL or NSURL
+        if let valueAsURL = value as? URL {
+            return try self.box(valueAsURL)
+        }
+        // Should convert when Decimal or NSDecimalNumber
+        if let valueAsDecimalNumber = value as? NSDecimalNumber {
+            return valueAsDecimalNumber
         }
         
         let depth = self.storage.count
