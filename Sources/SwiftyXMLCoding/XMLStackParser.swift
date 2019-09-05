@@ -64,6 +64,10 @@ internal class _XMLElement {
     var attributes: [String: String] = [:]
     var children: [String: [_XMLElement]] = [:]
     
+    var sortedChildren: [(String, [_XMLElement])] {
+        children.map{$0}.sorted { $0.0 < $1.0 }
+    }
+    
     internal init(key: String, value: String? = nil, attributes: [String: String] = [:], children: [String: [_XMLElement]] = [:]) {
         self.key = key
         self.value = value
@@ -219,8 +223,8 @@ internal class _XMLElement {
         } else if !children.isEmpty {
             string += ">\n"
             
-            for childElement in children {
-                for child in childElement.value {
+            for childElement in sortedChildren {
+                for child in childElement.1 {
                     string += child._toXMLString(indented: level + 1, withCDATA: cdata)
                     string += "\n"
                 }
