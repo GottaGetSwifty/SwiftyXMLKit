@@ -1,5 +1,5 @@
 import XCTest
-@testable import XMLParsing
+@testable import SwiftyXMLCoding
 
 class XMLParsingTests: XCTestCase {
     func testExample() {

@@ -1,4 +1,4 @@
-# XMLParsing
+# SwiftyXMLKit
 Encoder &amp; Decoder for XML using Swift's _codable_ protocol.
 
 ## Installation
