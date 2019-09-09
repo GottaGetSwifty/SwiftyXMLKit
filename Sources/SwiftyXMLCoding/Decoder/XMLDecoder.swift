@@ -706,11 +706,68 @@ extension _XMLDecoder {
         let doubleValue: Double = try self.unbox(value)!
         return Decimal(doubleValue)
     }
-    
+
     internal func _unbox<T : Decodable>(_ value: Any) throws -> T? {
         try expectNonNull(T.self)
+        
         let decoded: T
         switch T.self {
+        case is XMLAttributeProperty<Bool>.Type:
+            if let value: Bool = try unbox(value) {
+                return XMLAttributeProperty<Bool>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<Int>.Type:
+            if let value: Int = try unbox(value) {
+                return XMLAttributeProperty<Int>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<Int8>.Type:
+            if let value: Int8 = try unbox(value) {
+                return XMLAttributeProperty<Int8>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<Int16>.Type:
+            if let value: Int16 = try unbox(value) {
+                return XMLAttributeProperty<Int16>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<Int32>.Type:
+            if let value: Int32 = try unbox(value) {
+                return XMLAttributeProperty<Int32>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<Int64>.Type:
+            if let value: Int64 = try unbox(value) {
+                return XMLAttributeProperty<Int64>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<UInt>.Type:
+            if let value: UInt = try unbox(value) {
+                return XMLAttributeProperty<UInt>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<UInt8>.Type:
+            if let value: UInt8 = try unbox(value) {
+                return XMLAttributeProperty<UInt8>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<UInt16>.Type:
+            if let value: UInt16 = try unbox(value) {
+                return XMLAttributeProperty<UInt16>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<UInt32>.Type:
+            if let value: UInt32 = try unbox(value) {
+                return XMLAttributeProperty<UInt32>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<UInt64>.Type:
+            if let value: UInt64 = try unbox(value) {
+                return XMLAttributeProperty<UInt64>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<Float>.Type:
+            if let value: Float = try unbox(value) {
+                return XMLAttributeProperty<Float>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<Double>.Type:
+            if let value: Double = try unbox(value) {
+                return XMLAttributeProperty<Double>(wrappedValue: value) as? T
+            }
+        case is XMLAttributeProperty<String>.Type:
+            if let value: String = try unbox(value) {
+                return XMLAttributeProperty<String>(wrappedValue: value) as? T
+            }
         case is Date.Type, is NSDate.Type:
             guard let date: Date = try self.unbox(value) else { return nil }
             return date as? T
@@ -734,6 +791,7 @@ extension _XMLDecoder {
             defer { self.storage.popContainer() }
             return try T.init(from: self)
         }
+        return nil
     }
 }
 

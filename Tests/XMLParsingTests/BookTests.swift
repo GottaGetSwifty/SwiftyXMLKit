@@ -57,7 +57,7 @@ class BookTests: QuickSpec {
                     let data = bookXML.data(using: .utf8)!
                     let book = try! self.decoder.decode(Book.self, from: data)
                     self.compareBooks(book, bookResult)
-                    
+
                 }
             }
         }

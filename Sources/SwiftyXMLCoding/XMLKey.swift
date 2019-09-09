@@ -8,6 +8,17 @@
 
 import Foundation
 
+@propertyWrapper
+public struct XMLAttributeProperty<T: Codable>: Codable {
+    public var wrappedValue: T
+    public init(wrappedValue: T) {
+        self.wrappedValue = wrappedValue
+    }
+}
+extension XMLAttributeProperty: Equatable where T: Equatable {
+    
+}
+
 //===----------------------------------------------------------------------===//
 // Shared Key Types
 //===----------------------------------------------------------------------===//

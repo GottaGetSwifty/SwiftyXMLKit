@@ -383,16 +383,17 @@ fileprivate struct _XMLKeyedEncodingContainer<K : CodingKey> : KeyedEncodingCont
     private mutating func _encode<T: NSObjectable>(_ value: T, forKey key: Key) throws where T: Encodable {
         self.encoder.codingPath.append(key)
         defer { self.encoder.codingPath.removeLast() }
-        switch self.encoder.options.attributeEncodingStrategy {
-        case .custom(let closure) where closure(self.encoder):
+        
+        if let boxedValue = try self.encoder.boxIfAttribute(value) {
             if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = try self.encoder.box(value)
+                attributesContainer[_converted(key).stringValue] = boxedValue
             } else {
                 let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = try self.encoder.box(value)
+                attributesContainer[_converted(key).stringValue] = boxedValue
                 self.container[_XMLElement.attributesKey] = attributesContainer
             }
-        default:
+        }
+        else {
             self.container[_converted(key).stringValue] = try self.encoder.box(value)
         }
     }
@@ -415,24 +416,34 @@ fileprivate struct _XMLKeyedEncodingContainer<K : CodingKey> : KeyedEncodingCont
     public mutating func encode<T : Encodable>(_ value: T, forKey key: Key) throws {
         self.encoder.codingPath.append(key)
         defer { self.encoder.codingPath.removeLast() }
-        
-        if T.self == Date.self || T.self == NSDate.self {
-            switch self.encoder.options.attributeEncodingStrategy {
-            case .custom(let closure) where closure(self.encoder):
-                if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                    attributesContainer[_converted(key).stringValue] = try self.encoder.box(value)
-                } else {
-                    let attributesContainer = NSMutableDictionary()
-                    attributesContainer[_converted(key).stringValue] = try self.encoder.box(value)
-                    self.container[_XMLElement.attributesKey] = attributesContainer
-                }
-            default:
-                self.container[_converted(key).stringValue] = try self.encoder.box(value)
+        if let boxedValue = try self.encoder.boxIfAttribute(value) {
+            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
+                attributesContainer[_converted(key).stringValue] = boxedValue
+            } else {
+                let attributesContainer = NSMutableDictionary()
+                attributesContainer[_converted(key).stringValue] = boxedValue
+                self.container[_XMLElement.attributesKey] = attributesContainer
             }
+        }
+        else if T.self == Date.self || T.self == NSDate.self {
+//            switch self.encoder.options.attributeEncodingStrategy {
+//            case .custom(let closure) where closure(self.encoder):
+//                if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
+//                    attributesContainer[_converted(key).stringValue] = try self.encoder.box(value)
+//                } else {
+//                    let attributesContainer = NSMutableDictionary()
+//                    attributesContainer[_converted(key).stringValue] = try self.encoder.box(value)
+//                    self.container[_XMLElement.attributesKey] = attributesContainer
+//                }
+//            default:
+                self.container[_converted(key).stringValue] = try self.encoder.box(value)
+//            }
         } else {
             self.container[_converted(key).stringValue] = try self.encoder.box(value)
         }
     }
+    
+
     
     public mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> {
         let dictionary = NSMutableDictionary()
@@ -700,6 +711,66 @@ extension _XMLEncoder {
         }
         
         return self.storage.popContainer()
+    }
+    
+    fileprivate func boxIfAttribute<T>(_ value: T) throws -> NSObject?  {
+        if let wrapper = value as? XMLAttributeProperty<Bool> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<Int> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<Int8> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<Int16> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<Int32> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<Int64> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<UInt> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<UInt8> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<UInt16> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<UInt32> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<UInt64> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<String> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<Float> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        if let wrapper = value as? XMLAttributeProperty<Double> {
+            let wrappedValue = wrapper.wrappedValue
+            return try box(wrappedValue)
+        }
+        return nil
     }
 }
 

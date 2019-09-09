@@ -294,7 +294,7 @@ internal class _XMLStackParser: NSObject, XMLParserDelegate {
     
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         let node = _XMLElement(key: elementName)
-        node.attributes = attributeDict
+    node.attributes = attributeDict
         stack.append(node)
         
         if let currentNode = currentNode {

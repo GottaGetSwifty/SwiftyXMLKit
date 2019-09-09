@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import SwiftyXMLCoding
 
 struct Catalog: Codable {
     var books: [Book]
@@ -17,7 +18,7 @@ struct Catalog: Codable {
 }
 
 struct Book: Codable, Equatable {
-    var id: String
+    @XMLAttributeProperty var id: String
     var author: String
     var title: String
     var genre: Genre
