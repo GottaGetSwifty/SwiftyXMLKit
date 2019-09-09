@@ -83,7 +83,7 @@ internal class _XMLElement {
         self.init(key: key, value: nil, attributes: attributes.mapValues({ $0.description }), children: children)
     }
     
-    static func createRootElement(rootKey: String, object: NSObject) -> _XMLElement? {
+    static func createRootElement(rootKey: String, object: AnyObject) -> _XMLElement? {
         let element = _XMLElement(key: rootKey)
         
         if let object = object as? NSDictionary {
@@ -104,10 +104,10 @@ internal class _XMLElement {
     fileprivate static func modifyElement(element: _XMLElement, parentElement: _XMLElement?, key: String?, object: NSDictionary) {
         element.attributes = (object[_XMLElement.attributesKey] as? [String: Any])?.mapValues({ String(describing: $0) }) ?? [:]
         
-        let objects: [(String, NSObject)] = object.compactMap({
-            guard let key = $0 as? String, let value = $1 as? NSObject, key != _XMLElement.attributesKey else { return nil }
+        let objects: [(String, AnyObject)] = object.compactMap({
+            guard let key = $0 as? String, key != _XMLElement.attributesKey else { return nil }
             
-            return (key, value)
+            return (key, $1 as AnyObject)
         })
         
         for (key, value) in objects {
@@ -130,7 +130,7 @@ internal class _XMLElement {
     }
     
     fileprivate static func createElement(parentElement: _XMLElement, key: String, object: NSArray) {
-        let objects = object.compactMap({ $0 as? NSObject })
+        let objects = object.compactMap({ $0 as AnyObject })
         objects.forEach({
             if let dict = $0 as? NSDictionary {
                 _XMLElement.createElement(parentElement: parentElement, key: key, object: dict)
@@ -294,7 +294,7 @@ internal class _XMLStackParser: NSObject, XMLParserDelegate {
     
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         let node = _XMLElement(key: elementName)
-    node.attributes = attributeDict
+        node.attributes = attributeDict
         stack.append(node)
         
         if let currentNode = currentNode {

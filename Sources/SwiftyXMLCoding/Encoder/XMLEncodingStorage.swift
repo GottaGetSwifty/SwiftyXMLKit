@@ -16,7 +16,7 @@ internal struct _XMLEncodingStorage {
     
     /// The container stack.
     /// Elements may be any one of the XML types (NSNull, NSNumber, NSString, NSArray, NSDictionary).
-    private(set) internal var containers: [NSObject] = []
+    private(set) internal var containers: [AnyObject] = []
     
     // MARK: - Initialization
     
@@ -41,11 +41,11 @@ internal struct _XMLEncodingStorage {
         return array
     }
     
-    internal mutating func push(container: NSObject) {
+    internal mutating func push(container: AnyObject) {
         self.containers.append(container)
     }
     
-    internal mutating func popContainer() -> NSObject {
+    internal mutating func popContainer() -> AnyObject {
         precondition(!self.containers.isEmpty, "Empty container stack.")
         return self.containers.popLast()!
     }

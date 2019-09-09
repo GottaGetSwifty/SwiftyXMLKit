@@ -21,9 +21,6 @@ class BookTests: QuickSpec {
     let encoder: XMLEncoder = {
         let encoder = XMLEncoder()
         encoder.dateEncodingStrategy = .formatted(formatter)
-        encoder.attributeEncodingStrategy = .custom( { encoder in
-            return encoder.codingPath.last?.stringValue == "id"
-        })
         encoder.stringEncodingStrategy = .deferredToString
         return encoder
     }()
@@ -44,7 +41,6 @@ class BookTests: QuickSpec {
     }
     
     override func spec() {
-        
         describe("Book Parsing") {
             describe("Decoding") {
                 it("Encodes") {
