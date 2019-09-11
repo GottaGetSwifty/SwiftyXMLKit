@@ -232,6 +232,33 @@ open class XMLDecoder {
         
         return value
     }
+    
+    // MARK: - Decoding Values
+    /// Decodes a top-level value of the given type from the given XML representation.
+    ///
+    /// - parameter type: The type of the value to decode.
+    /// - parameter data: The data to decode from.
+    /// - returns: A value of the requested type.
+    /// - throws: `DecodingError.dataCorrupted` if values requested from the payload are corrupted, or if the given data is not valid XML.
+    /// - throws: An error if any value throws an error during decoding.
+    open func decodeNew<T : Decodable>(_ type: T.Type, from data: Data) throws -> T {
+        let parser = _XMLParser(data: data)
+        
+        let topLevel: [String: Any]
+        do {
+            topLevel = try _XMLStackParser.parse(with: data)
+        } catch {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "The given data was not valid XML.", underlyingError: error))
+        }
+        
+        let decoder = _XMLDecoder(referencing: topLevel, options: self.options)
+        
+        guard let value: T = try decoder._unbox(topLevel) else {
+            throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: [], debugDescription: "The given data did not contain a top-level value."))
+        }
+        
+        return value
+    }
 }
 
 // MARK: - _XMLDecoder

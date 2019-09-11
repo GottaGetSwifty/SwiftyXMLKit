@@ -42,12 +42,11 @@ class BookTests: QuickSpec {
     
     override func spec() {
         describe("Book Parsing") {
-            describe("Decoding") {
+            describe("Coding") {
                 it("Encodes") {
                     let data = try! self.encoder.encode(bookResult, withRootKey: "book", header: XMLHeader(version: 1.0))
                     let xmlString = String(data: data, encoding: .utf8)!
-                    expect(xmlString) == bookXML
-                    print(xmlString)
+                    expect(xmlString).to(haveEqualLines(to: bookXML))
                 }
                 it("Decodes") {
                     let data = bookXML.data(using: .utf8)!
@@ -64,7 +63,7 @@ private let bookResult = Book(id: "bk101", author: "Gambardella, Matthew", title
 private let bookXML = """
 <?xml version="1.0"?>
 <book id="bk101">
-    <author>Gambardella, Matthew</author>
+<author>Gambardella, Matthew</author>
     <description>An in-depth look at creating applications with XML.</description>
     <genre>Computer</genre>
     <price>44.95</price>
