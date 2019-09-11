@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+import SWXMLHash
 //===----------------------------------------------------------------------===//
 // XML Decoder
 //===----------------------------------------------------------------------===//
@@ -244,6 +244,9 @@ open class XMLDecoder {
     open func decodeNew<T : Decodable>(_ type: T.Type, from data: Data) throws -> T {
         let parser = _XMLParser(data: data)
         
+        let xml = parser.indexer.children[0]
+//        print(xml)
+        
         let topLevel: [String: Any]
         do {
             topLevel = try _XMLStackParser.parse(with: data)
@@ -332,9 +335,37 @@ internal class _XMLDecoder : Decoder {
     }
 }
 
-
+// MARK: SingleValueDecodingContainer
 extension _XMLDecoder : SingleValueDecodingContainer {
-    // MARK: SingleValueDecodingContainer Methods
+    
+    
+    public func decodeNil() -> Bool {
+        return self.storage.topContainer is NSNull
+    }
+    internal func _decode<T: XMLDecodable>() throws -> T {
+        try self.unbox(self.storage.topContainer)
+    }
+    
+    public func decode(_ type: Bool.Type) throws -> Bool { try _decode() }
+    public func decode(_ type: Int.Type) throws -> Int { try _decode() }
+    public func decode(_ type: Int8.Type) throws -> Int8 { try _decode() }
+    public func decode(_ type: Int16.Type) throws -> Int16 { try _decode() }
+    public func decode(_ type: Int32.Type) throws -> Int32 { try _decode() }
+    public func decode(_ type: Int64.Type) throws -> Int64 { try _decode() }
+    public func decode(_ type: UInt.Type) throws -> UInt { try _decode() }
+    public func decode(_ type: UInt8.Type) throws -> UInt8 { try _decode() }
+    public func decode(_ type: UInt16.Type) throws -> UInt16 { try _decode() }
+    public func decode(_ type: UInt32.Type) throws -> UInt32 { try _decode() }
+    public func decode(_ type: UInt64.Type) throws -> UInt64 { try _decode() }
+    public func decode(_ type: Float.Type) throws -> Float { try _decode() }
+    public func decode(_ type: Double.Type) throws -> Double { try _decode() }
+    public func decode(_ type: String.Type) throws -> String { try _decode() }
+    public func decode<T : Decodable>(_ type: T.Type) throws -> T { try self._unbox(self.storage.topContainer)! }
+}
+
+// MARK: - Concrete Value Representations
+
+extension _XMLDecoder {
     
     private func expectNonNull<T>(_ type: T.Type) throws {
         guard !self.decodeNil() else {
@@ -342,462 +373,51 @@ extension _XMLDecoder : SingleValueDecodingContainer {
         }
     }
     
-    public func decodeNil() -> Bool {
-        return self.storage.topContainer is NSNull
+    internal func unbox<T: XMLDecodable>(_ value: Any) throws -> T {
+        try expectNonNull(T.self)
+        return try T.unbox(value, decoder: self)
     }
     
-    public func decode(_ type: Bool.Type) throws -> Bool { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: Int.Type) throws -> Int { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: Int8.Type) throws -> Int8 { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: Int16.Type) throws -> Int16 { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: Int32.Type) throws -> Int32 { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: Int64.Type) throws -> Int64 { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: UInt.Type) throws -> UInt { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: UInt8.Type) throws -> UInt8 { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: UInt16.Type) throws -> UInt16 { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: UInt32.Type) throws -> UInt32 { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: UInt64.Type) throws -> UInt64 { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: Float.Type) throws -> Float { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: Double.Type) throws -> Double { try self.unbox(self.storage.topContainer) }
-    public func decode(_ type: String.Type) throws -> String { try self.unbox(self.storage.topContainer) }
-    public func decode<T : Decodable>(_ type: T.Type) throws -> T { try self._unbox(self.storage.topContainer)! }
-}
-
-// MARK: - Concrete Value Representations
-
-extension _XMLDecoder {
-    private func doUnboxSetup<T>(_ value: Any, type: T.Type) throws -> String {
-        try expectNonNull(type)
-        guard let stringValue = value as? String else {
-            throw DecodingError.valueNotFound(type,  DecodingError.Context(codingPath: self.codingPath,
-                                                                           debugDescription: "Expected \(type) but could not convert \(value) to String"))
-        }
-        return stringValue
-    }
-    /// Returns the given value unboxed from a container.
-    internal func unbox(_ value: Any) throws -> Bool {
-        let value = try doUnboxSetup(value, type: Bool.self)
-        
-        if value == "true" || value == "1" {
-            return true
-        } else if value == "false" || value == "0" {
-            return false
-        }
-        
-        throw DecodingError._typeMismatch(at: self.codingPath, expectation: Bool.self, reality: value)
+    internal func unbox<T: XMLDecodable>(_ value: Any, type: T.Type) throws -> T {
+        return try unbox(value)
     }
     
-    internal func unbox(_ value: Any) throws -> Int {
-        let string = try doUnboxSetup(value, type: Int.self)
-        
-        guard let value = Float(string) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int.self, reality: string)
-        }
-        
-        let number = NSNumber(value: value)
-        
-        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int.self, reality: value)
-        }
-        
-        let int = number.intValue
-        guard NSNumber(value: int) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(Int.self)."))
-        }
-        
-        return int
+    func unboxAttribute<T: XMLDecodable>(_ value: Any, type: T.Type) throws -> XMLAttributeProperty<T> {
+        return XMLAttributeProperty<T>(wrappedValue: try unbox(value))
     }
-    
-    internal func unbox(_ value: Any) throws -> Int8 {
-        let string = try doUnboxSetup(value, type: Int8.self)
-        
-        guard let value = Float(string) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int8.self, reality: string)
-        }
-        
-        let number = NSNumber(value: value)
-        
-        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int8.self, reality: value)
-        }
-        
-        let int8 = number.int8Value
-        guard NSNumber(value: int8) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(Int8.self)."))
-        }
-        
-        return int8
-    }
-    
-    internal func unbox(_ value: Any) throws -> Int16 {
-        let string = try doUnboxSetup(value, type: Int16.self)
-        
-        guard let value = Float(string) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int16.self, reality: string)
-        }
-        
-        let number = NSNumber(value: value)
-        
-        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int16.self, reality: value)
-        }
-        
-        let int16 = number.int16Value
-        guard NSNumber(value: int16) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(Int16.self)."))
-        }
-        
-        return int16
-    }
-    
-    internal func unbox(_ value: Any) throws -> Int32 {
-        let string = try doUnboxSetup(value, type: Int32.self)
-        
-        guard let value = Float(string) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int32.self, reality: string)
-        }
-        
-        let number = NSNumber(value: value)
-        
-        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int32.self, reality: value)
-        }
-        
-        let int32 = number.int32Value
-        guard NSNumber(value: int32) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(Int32.self)."))
-        }
-        
-        return int32
-    }
-    
-    internal func unbox(_ value: Any) throws -> Int64 {
-        let string = try doUnboxSetup(value, type: Int64.self)
-        
-        guard let value = Float(string) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int64.self, reality: string)
-        }
-        
-        let number = NSNumber(value: value)
-        
-        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: Int64.self, reality: value)
-        }
-        
-        let int64 = number.int64Value
-        guard NSNumber(value: int64) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(Int64.self)."))
-        }
-        
-        return int64
-    }
-    
-    internal func unbox(_ value: Any) throws -> UInt {
-        let string = try doUnboxSetup(value, type: UInt.self)
-        
-        guard let value = Float(string) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt.self, reality: string)
-        }
-        
-        let number = NSNumber(value: value)
-        
-        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt.self, reality: value)
-        }
-        
-        let uint = number.uintValue
-        guard NSNumber(value: uint) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(UInt.self)."))
-        }
-        
-        return uint
-    }
-    
-    internal func unbox(_ value: Any) throws -> UInt8 {
-        let string = try doUnboxSetup(value, type: UInt8.self)
-        
-        guard let value = Float(string) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt8.self, reality: string)
-        }
-        
-        let number = NSNumber(value: value)
-        
-        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt8.self, reality: value)
-        }
-        
-        let uint8 = number.uint8Value
-        guard NSNumber(value: uint8) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(UInt8.self)."))
-        }
-        
-        return uint8
-    }
-    
-    internal func unbox(_ value: Any) throws -> UInt16 {
-        let string = try doUnboxSetup(value, type: UInt16.self)
-        
-        guard let value = Float(string) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt16.self, reality: string)
-        }
-        
-        let number = NSNumber(value: value)
-        
-        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt16.self, reality: value)
-        }
-        
-        let uint16 = number.uint16Value
-        guard NSNumber(value: uint16) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(UInt16.self)."))
-        }
-        
-        return uint16
-    }
-    
-    internal func unbox(_ value: Any) throws -> UInt32 {
-        let string = try doUnboxSetup(value, type: UInt32.self)
-        
-        guard let value = Float(string) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt32.self, reality: string)
-        }
-        
-        let number = NSNumber(value: value)
-        
-        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt32.self, reality: value)
-        }
-        
-        let uint32 = number.uint32Value
-        guard NSNumber(value: uint32) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(UInt32.self)."))
-        }
-        
-        return uint32
-    }
-    
-    internal func unbox(_ value: Any) throws -> UInt64 {
-        let string = try doUnboxSetup(value, type: UInt64.self)
-        
-        guard let value = Float(string) else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt64.self, reality: string)
-        }
-        
-        let number = NSNumber(value: value)
-        
-        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: UInt64.self, reality: value)
-        }
-        
-        let uint64 = number.uint64Value
-        guard NSNumber(value: uint64) == number else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(UInt64.self)."))
-        }
-        
-        return uint64
-    }
-    
-    internal func unbox(_ value: Any) throws -> Float {
-        let string = try doUnboxSetup(value, type: Float.self)
-        
-        if let value = Double(string) {
-            let number = NSNumber(value: value)
-            
-            guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-                throw DecodingError._typeMismatch(at: self.codingPath, expectation: Float.self, reality: value)
-            }
-            
-            let double = number.doubleValue
-            guard abs(double) <= Double(Float.greatestFiniteMagnitude) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Parsed XML number \(number) does not fit in \(Float.self)."))
-            }
-            
-            return Float(double)
-        } else if case let .convertFromString(posInfString, negInfString, nanString) = self.options.nonConformingFloatDecodingStrategy {
-            if string == posInfString {
-                return Float.infinity
-            } else if string == negInfString {
-                return -Float.infinity
-            } else if string == nanString {
-                return Float.nan
-            }
-        }
-        
-        throw DecodingError._typeMismatch(at: self.codingPath, expectation: Float.self, reality: value)
-    }
-    
-    internal func unbox(_ value: Any) throws -> Double {
-        let string = try doUnboxSetup(value, type: Double.self)
-        
-        if let number = Decimal(string: string) as NSDecimalNumber? {
-            
-            guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-                throw DecodingError._typeMismatch(at: self.codingPath, expectation: Double.self, reality: value)
-            }
-            
-            return number.doubleValue
-        } else if case let .convertFromString(posInfString, negInfString, nanString) = self.options.nonConformingFloatDecodingStrategy {
-            if string == posInfString {
-                return Double.infinity
-            } else if string == negInfString {
-                return -Double.infinity
-            } else if string == nanString {
-                return Double.nan
-            }
-        }
-        
-        throw DecodingError._typeMismatch(at: self.codingPath, expectation: Double.self, reality: value)
-    }
-    
-    internal func unbox(_ value: Any) throws -> String {
-        let value = try doUnboxSetup(value, type: String.self)
-        
-        return value
-    }
-    
-    internal func unbox(_ value: Any) throws -> Date {
-        try expectNonNull(Date.self)
-        
-        switch self.options.dateDecodingStrategy {
-        case .deferredToDate:
-            self.storage.push(container: value)
-            defer { self.storage.popContainer() }
-            return try Date(from: self)
-            
-        case .secondsSince1970:
-            let double: Double = try self.unbox(value)
-            return Date(timeIntervalSince1970: double)
-            
-        case .millisecondsSince1970:
-            let double: Double = try self.unbox(value)
-            return Date(timeIntervalSince1970: double / 1000.0)
-            
-        case .iso8601:
-            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
-                let string: String = try self.unbox(value)
-                guard let date = _iso8601Formatter.date(from: string) else {
-                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted."))
-                }
-                
-                return date
-            } else {
-                fatalError("ISO8601DateFormatter is unavailable on this platform.")
-            }
-            
-        case .formatted(let formatter):
-            let string: String = try self.unbox(value)
-            guard let date = formatter.date(from: string) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected by formatter."))
-            }
-            
-            return date
-            
-        case .custom(let closure):
-            self.storage.push(container: value)
-            defer { self.storage.popContainer() }
-            return try closure(self)
-        }
-    }
-    
-    internal func unbox(_ value: Any) throws -> Data {
-        try expectNonNull(Data.self)
-        
-        switch self.options.dataDecodingStrategy {
-        case .deferredToData:
-            self.storage.push(container: value)
-            defer { self.storage.popContainer() }
-            return try Data(from: self)
-            
-        case .base64:
-            guard let string = value as? String else {
-                throw DecodingError._typeMismatch(at: self.codingPath, expectation: Data.self, reality: value)
-            }
-            
-            guard let data = Data(base64Encoded: string) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Encountered Data is not valid Base64."))
-            }
-            
-            return data
-            
-        case .custom(let closure):
-            self.storage.push(container: value)
-            defer { self.storage.popContainer() }
-            return try closure(self)
-        }
-    }
-    
-    internal func unbox(_ value: Any) throws -> Decimal {
-        try expectNonNull(Decimal.self)
-        
-        // Attempt to bridge from NSDecimalNumber.
-        let doubleValue: Double = try self.unbox(value)
-        return Decimal(doubleValue)
-    }
-
     internal func _unbox<T : Decodable>(_ value: Any) throws -> T? {
         try expectNonNull(T.self)
         
+        //checking whether it's already a property to avoid running the full switch everytime
         if T.self is AnyXMLAttributeProperty.Type {
+            
             switch T.self {
-            case is XMLAttributeProperty<Bool>.Type:
-                return XMLAttributeProperty<Bool>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<Int>.Type:
-                return XMLAttributeProperty<Int>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<Int8>.Type:
-                return XMLAttributeProperty<Int8>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<Int16>.Type:
-                return XMLAttributeProperty<Int16>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<Int32>.Type:
-                return XMLAttributeProperty<Int32>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<Int64>.Type:
-                return XMLAttributeProperty<Int64>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<UInt>.Type:
-                return XMLAttributeProperty<UInt>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<UInt8>.Type:
-                return XMLAttributeProperty<UInt8>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<UInt16>.Type:
-                return XMLAttributeProperty<UInt16>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<UInt32>.Type:
-                return XMLAttributeProperty<UInt32>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<UInt64>.Type:
-                return XMLAttributeProperty<UInt64>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<Float>.Type:
-                return XMLAttributeProperty<Float>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<Double>.Type:
-                return XMLAttributeProperty<Double>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<String>.Type:
-                return XMLAttributeProperty<String>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<Date>.Type:
-                return XMLAttributeProperty<Date>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<Data>.Type:
-                return XMLAttributeProperty<Data>(wrappedValue: try unbox(value)) as? T
-            case is XMLAttributeProperty<URL>.Type:
-                guard let url = URL(string: try unbox(value)) else {
-                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath,
-                                                                            debugDescription: "Invalid URL string."))
-                }
-                return XMLAttributeProperty<URL>(wrappedValue: url) as? T
+            case is XMLAttributeProperty<Bool>.Type: return try unboxAttribute(value, type: Bool.self) as? T
+            case is XMLAttributeProperty<Int>.Type: return try unboxAttribute(value, type: Int.self) as? T
+            case is XMLAttributeProperty<Int8>.Type: return try unboxAttribute(value, type: Int8.self) as? T
+            case is XMLAttributeProperty<Int16>.Type: return try unboxAttribute(value, type: Int16.self) as? T
+            case is XMLAttributeProperty<Int32>.Type: return try unboxAttribute(value, type: Int32.self) as? T
+            case is XMLAttributeProperty<Int64>.Type: return try unboxAttribute(value, type: Int64.self) as? T
+            case is XMLAttributeProperty<UInt>.Type: return try unboxAttribute(value, type: UInt.self) as? T
+            case is XMLAttributeProperty<UInt8>.Type: return try unboxAttribute(value, type: UInt8.self) as? T
+            case is XMLAttributeProperty<UInt16>.Type: return try unboxAttribute(value, type: UInt16.self) as? T
+            case is XMLAttributeProperty<UInt32>.Type: return try unboxAttribute(value, type: UInt32.self) as? T
+            case is XMLAttributeProperty<UInt64>.Type: return try unboxAttribute(value, type: UInt64.self) as? T
+            case is XMLAttributeProperty<Float>.Type: return try unboxAttribute(value, type: Float.self) as? T
+            case is XMLAttributeProperty<Double>.Type: return try unboxAttribute(value, type: Double.self) as? T
+            case is XMLAttributeProperty<String>.Type: return try unboxAttribute(value, type: String.self) as? T
+            case is XMLAttributeProperty<Date>.Type: return try unboxAttribute(value, type: Date.self) as? T
+            case is XMLAttributeProperty<Data>.Type: return try unboxAttribute(value, type: Data.self) as? T
+            case is XMLAttributeProperty<URL>.Type: return try unboxAttribute(value, type: URL.self) as? T
             default: return nil
             }
         }
         
         switch T.self {
-        case is Date.Type, is NSDate.Type:
-            let date: Date = try self.unbox(value)
-            return date as? T
-        case is Data.Type, is NSData.Type:
-            let data: Data = try self.unbox(value)
-            return data as? T
-        case is URL.Type, is NSURL.Type:
-            let urlString: String = try self.unbox(value)
-            guard let url = URL(string: urlString) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath,
-                                                                        debugDescription: "Invalid URL string."))
-            }
-            return url as? T
-        case is Decimal.Type, is NSDecimalNumber.Type:
-            let decimal: Decimal = try self.unbox(value)
-            return decimal as? T
+        case is Date.Type, is NSDate.Type: return try unbox(value, type: Date.self) as? T
+        case is Data.Type, is NSData.Type: return try unbox(value, type: Data.self) as? T
+        case is URL.Type, is NSURL.Type: return try unbox(value, type: URL.self) as? T
+        case is Decimal.Type, is NSDecimalNumber.Type: return try unbox(value, type: Decimal.self) as? T
         default:
             self.storage.push(container: value)
             defer { self.storage.popContainer() }
@@ -806,3 +426,330 @@ extension _XMLDecoder {
     }
 }
 
+internal protocol XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Self
+}
+
+extension XMLDecodable {
+    static func unwrapToString<T>(_ value: Any, codingPath: [CodingKey], type: T.Type) throws -> String {
+        
+        guard let stringValue = value as? String else {
+            throw DecodingError.valueNotFound(type,  DecodingError.Context(codingPath: codingPath,
+                                                                           debugDescription: "Expected \(type) but could not convert \(value) to String"))
+        }
+        return stringValue
+    }
+    
+    static func doNumberSetup<T>(_ stringValue: String, codingPath: [CodingKey], type: T.Type) throws -> NSNumber {
+        guard let floatValue = Double(stringValue) else {
+            throw DecodingError._typeMismatch(at: codingPath, expectation: T.self, reality: stringValue)
+        }
+        
+        let number = NSNumber(value: floatValue)
+        
+        guard number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+            throw DecodingError._typeMismatch(at: codingPath, expectation: T.self, reality: number)
+        }
+        return number
+    }
+}
+
+extension Bool: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Bool {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Bool.self)
+        switch string {
+        case "true", "1": return true
+        case "false", "0": return false
+        default:
+            throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Bool.self, reality: value)
+        }
+    }
+}
+
+extension Int: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Int {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Int.self)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: Int.self)
+        
+        let int = number.intValue
+        guard NSNumber(value: int) == number else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(Int.self)."))
+        }
+        
+        return int
+    }
+}
+
+extension Int8: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Int8 {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Int8.self)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: Int8.self)
+        
+        let int8 = number.int8Value
+        guard NSNumber(value: int8) == number else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(Int8.self)."))
+        }
+        
+        return int8
+    }
+}
+
+extension Int16: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Int16 {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Int16.self)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: Int16.self)
+    
+        let int16 = number.int16Value
+        guard NSNumber(value: int16) == number else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(Int16.self)."))
+        }
+        
+        return int16
+    }
+}
+
+extension Int32: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Int32 {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Int32.self)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: Int32.self)
+    
+        let int32 = number.int32Value
+        guard NSNumber(value: int32) == number else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(Int32.self)."))
+        }
+        
+        return int32
+    }
+}
+
+extension Int64: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Int64 {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Int64.self)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: Int64.self)
+    
+        let int64 = number.int64Value
+        guard NSNumber(value: int64) == number else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(Int64.self)."))
+        }
+        
+        return int64
+    }
+}
+
+extension UInt: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> UInt {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: UInt.self)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: UInt.self)
+        
+        let uint = number.uintValue
+        guard NSNumber(value: uint) == number else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(UInt.self)."))
+        }
+        
+        return uint
+    }
+}
+
+extension UInt8: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> UInt8 {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: UInt8.self)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: UInt8.self)
+    
+        let uint8 = number.uint8Value
+        guard NSNumber(value: uint8) == number else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(UInt8.self)."))
+        }
+        
+        return uint8
+    }
+}
+
+extension UInt16: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> UInt16 {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: UInt16.self)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: UInt16.self)
+    
+        let uint16 = number.uint16Value
+        guard NSNumber(value: uint16) == number else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(UInt16.self)."))
+        }
+        
+        return uint16
+    }
+}
+
+extension UInt32: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> UInt32 {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: UInt32.self)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: UInt32.self)
+    
+        let uint32 = number.uint32Value
+        guard NSNumber(value: uint32) == number else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(UInt32.self)."))
+        }
+        
+        return uint32
+    }
+}
+
+extension UInt64: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> UInt64 {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: UInt64.self)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: UInt64.self)
+    
+        let uint64 = number.uint64Value
+        guard NSNumber(value: uint64) == number else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number <\(number)> does not fit in \(UInt64.self)."))
+        }
+        
+        return uint64
+    }
+}
+
+extension Float: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Float {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Float.self)
+        
+        switch decoder.options.nonConformingFloatDecodingStrategy {
+        case .convertFromString(let posInfString, let negInfString, let nanString):
+            switch string {
+            case posInfString: return Float.infinity
+            case negInfString: return -Float.infinity
+            case nanString: return Float.nan
+            default: throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Float.self, reality: value)
+            }
+        default:
+            let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: Int.self)
+            let double = number.doubleValue
+            guard abs(double) <= Double(Float.greatestFiniteMagnitude) else {
+                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number \(number) does not fit in \(Float.self)."))
+            }
+            
+            return Float(double)
+        }
+    }
+}
+
+extension Double: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Double {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Double.self)
+        
+        switch decoder.options.nonConformingFloatDecodingStrategy {
+        case .convertFromString(let posInfString, let negInfString, let nanString):
+            switch string {
+            case posInfString: return Double.infinity
+            case negInfString: return -Double.infinity
+            case nanString: return Double.nan
+            default: throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Double.self, reality: value)
+            }
+        default:
+            guard let number = Decimal(string: string) as NSDecimalNumber?,
+                number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+                    throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Double.self, reality: value)
+            }
+            
+            return number.doubleValue
+        }
+    }
+}
+
+extension String: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> String {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Double.self)
+        
+        return string
+    }
+}
+
+extension Date: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Date {
+        
+        switch decoder.options.dateDecodingStrategy {
+        case .deferredToDate:
+            decoder.storage.push(container: value)
+            defer { decoder.storage.popContainer() }
+            return try Date(from: decoder)
+
+        case .secondsSince1970:
+            let double: Double = try Double.unbox(value, decoder: decoder)
+            return Date(timeIntervalSince1970: double)
+            
+        case .millisecondsSince1970:
+            let double: Double = try Double.unbox(value, decoder: decoder)
+            return Date(timeIntervalSince1970: double / 1000.0)
+            
+        case .iso8601:
+            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
+                let string: String = try String.unbox(value, decoder: decoder)
+                guard let date = _iso8601Formatter.date(from: string) else {
+                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Expected date string to be ISO8601-formatted."))
+                }
+                
+                return date
+            } else {
+                fatalError("ISO8601DateFormatter is unavailable on this platform.")
+            }
+            
+        case .formatted(let formatter):
+            let string: String = try String.unbox(value, decoder: decoder)
+            guard let date = formatter.date(from: string) else {
+                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Date string does not match format expected by formatter."))
+            }
+            
+            return date
+            
+        case .custom(let closure):
+            decoder.storage.push(container: value)
+            defer { decoder.storage.popContainer() }
+            return try closure(decoder)
+        }
+    }
+}
+
+extension Data: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Data {
+        
+        switch decoder.options.dataDecodingStrategy {
+        case .deferredToData:
+            decoder.storage.push(container: value)
+            defer { decoder.storage.popContainer() }
+            return try Data(from: decoder)
+            
+        case .base64:
+            guard let string = value as? String else {
+                throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Data.self, reality: value)
+            }
+            
+            guard let data = Data(base64Encoded: string) else {
+                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Encountered Data is not valid Base64."))
+            }
+            
+            return data
+            
+        case .custom(let closure):
+            decoder.storage.push(container: value)
+            defer { decoder.storage.popContainer() }
+            return try closure(decoder)
+        }
+    }
+}
+
+extension Decimal: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Decimal {
+        
+        // Attempt to bridge from NSDecimalNumber.
+        let doubleValue: Double = try Double.unbox(value, decoder: decoder)
+        return Decimal(doubleValue)
+    }
+}
+
+extension URL: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> URL {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Double.self)
+        guard let url = URL(string: string) else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath,
+                                                                    debugDescription: "Invalid URL string."))
+        }
+        return url
+    }
+}

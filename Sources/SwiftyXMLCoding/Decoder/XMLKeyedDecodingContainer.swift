@@ -81,6 +81,10 @@ internal struct _XMLKeyedDecodingContainer<K : CodingKey> : KeyedDecodingContain
         }
     }
     
+    internal func _decode<T: XMLDecodable>(forKey key: Key) throws -> T {
+        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
+    }
+    
     private func _decode<T>(key: Key, getValue: (Any) throws -> T?) throws -> T {
         guard let entry = self.container[key.stringValue] else {
             throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "No value associated with key \(_errorDescription(of: key))."))
@@ -96,61 +100,20 @@ internal struct _XMLKeyedDecodingContainer<K : CodingKey> : KeyedDecodingContain
         return value
     }
     
-    public func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: Int.Type, forKey key: Key) throws -> Int {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: Int8.Type, forKey key: Key) throws -> Int8 {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: Int16.Type, forKey key: Key) throws -> Int16 {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: Int32.Type, forKey key: Key) throws -> Int32 {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: Int64.Type, forKey key: Key) throws -> Int64 {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: UInt.Type, forKey key: Key) throws -> UInt {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: UInt8.Type, forKey key: Key) throws -> UInt8 {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: UInt16.Type, forKey key: Key) throws -> UInt16 {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: UInt32.Type, forKey key: Key) throws -> UInt32 {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: UInt64.Type, forKey key: Key) throws -> UInt64 {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: Float.Type, forKey key: Key) throws -> Float {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: Double.Type, forKey key: Key) throws -> Double {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
-    
-    public func decode(_ type: String.Type, forKey key: Key) throws -> String {
-        try _decode(key: key, getValue: {try self.decoder.unbox($0)})
-    }
+    public func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool { try _decode(forKey: key) }
+    public func decode(_ type: Int.Type, forKey key: Key) throws -> Int { try _decode(forKey: key) }
+    public func decode(_ type: Int8.Type, forKey key: Key) throws -> Int8 { try _decode(forKey: key) }
+    public func decode(_ type: Int16.Type, forKey key: Key) throws -> Int16 { try _decode(forKey: key) }
+    public func decode(_ type: Int32.Type, forKey key: Key) throws -> Int32 { try _decode(forKey: key) }
+    public func decode(_ type: Int64.Type, forKey key: Key) throws -> Int64 { try _decode(forKey: key) }
+    public func decode(_ type: UInt.Type, forKey key: Key) throws -> UInt { try _decode(forKey: key) }
+    public func decode(_ type: UInt8.Type, forKey key: Key) throws -> UInt8 { try _decode(forKey: key) }
+    public func decode(_ type: UInt16.Type, forKey key: Key) throws -> UInt16 { try _decode(forKey: key) }
+    public func decode(_ type: UInt32.Type, forKey key: Key) throws -> UInt32 { try _decode(forKey: key) }
+    public func decode(_ type: UInt64.Type, forKey key: Key) throws -> UInt64 { try _decode(forKey: key) }
+    public func decode(_ type: Float.Type, forKey key: Key) throws -> Float { try _decode(forKey: key) }
+    public func decode(_ type: Double.Type, forKey key: Key) throws -> Double { try _decode(forKey: key) }
+    public func decode(_ type: String.Type, forKey key: Key) throws -> String { try _decode(forKey: key) }
     
     public func decode<T : Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
         try _decode(key: key, getValue: {try self.decoder._unbox($0)})

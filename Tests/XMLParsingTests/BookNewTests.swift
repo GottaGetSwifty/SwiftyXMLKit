@@ -16,7 +16,7 @@ private let formatter: DateFormatter = {
     return formatter
 }()
 
-class BookTests: QuickSpec {
+class BookNewTests: QuickSpec {
     
     let encoder: XMLEncoder = {
         let encoder = XMLEncoder()
@@ -50,7 +50,7 @@ class BookTests: QuickSpec {
                 }
                 it("Decodes") {
                     let data = bookXML.data(using: .utf8)!
-                    let book = try! self.decoder.decode(Book.self, from: data)
+                    let book = try! self.decoder.decodeNew(Book.self, from: data)
                     self.compareBooks(book, bookResult)
 
                 }

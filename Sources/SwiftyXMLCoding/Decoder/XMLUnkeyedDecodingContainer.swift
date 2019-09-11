@@ -56,6 +56,10 @@ internal struct _XMLUnkeyedDecodingContainer : UnkeyedDecodingContainer {
         }
     }
     
+    mutating internal func _decode<T: XMLDecodable>() throws -> T {
+        try _decode({ try self.decoder.unbox($0) }) { currentIndex += 1 }
+    }
+    
     /// - Parameter runWhenFinished: Used to allow mutating things to be passed in
     private func _decode<T>(_ getValue: (Any) throws -> T?, runWhenFinished: () -> ()) throws -> T {
         guard !self.isAtEnd else {
@@ -72,61 +76,20 @@ internal struct _XMLUnkeyedDecodingContainer : UnkeyedDecodingContainer {
         return decoded
     }
     
-    public mutating func decode(_ type: Bool.Type) throws -> Bool {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: Int.Type) throws -> Int {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: Int8.Type) throws -> Int8 {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: Int16.Type) throws -> Int16 {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: Int32.Type) throws -> Int32 {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: Int64.Type) throws -> Int64 {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: UInt.Type) throws -> UInt {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: UInt8.Type) throws -> UInt8 {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: UInt16.Type) throws -> UInt16 {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: UInt32.Type) throws -> UInt32 {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: UInt64.Type) throws -> UInt64 {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: Float.Type) throws -> Float {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: Double.Type) throws -> Double {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
-    
-    public mutating func decode(_ type: String.Type) throws -> String {
-        try self._decode({ try self.decoder.unbox($0) }) { self.currentIndex += 1 }
-    }
+    public mutating func decode(_ type: Bool.Type) throws -> Bool { try self._decode() }
+    public mutating func decode(_ type: Int.Type) throws -> Int { try self._decode() }
+    public mutating func decode(_ type: Int8.Type) throws -> Int8 { try self._decode() }
+    public mutating func decode(_ type: Int16.Type) throws -> Int16 { try self._decode() }
+    public mutating func decode(_ type: Int32.Type) throws -> Int32 { try self._decode() }
+    public mutating func decode(_ type: Int64.Type) throws -> Int64 { try self._decode() }
+    public mutating func decode(_ type: UInt.Type) throws -> UInt { try self._decode() }
+    public mutating func decode(_ type: UInt8.Type) throws -> UInt8 { try self._decode() }
+    public mutating func decode(_ type: UInt16.Type) throws -> UInt16 { try self._decode() }
+    public mutating func decode(_ type: UInt32.Type) throws -> UInt32 { try self._decode() }
+    public mutating func decode(_ type: UInt64.Type) throws -> UInt64 { try self._decode() }
+    public mutating func decode(_ type: Float.Type) throws -> Float { try self._decode() }
+    public mutating func decode(_ type: Double.Type) throws -> Double { try self._decode() }
+    public mutating func decode(_ type: String.Type) throws -> String { try self._decode() }
     
     public mutating func decode<T : Decodable>(_ type: T.Type) throws -> T {
         try self._decode({ try self.decoder._unbox($0) }) { self.currentIndex += 1 }
