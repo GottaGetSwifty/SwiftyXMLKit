@@ -226,7 +226,7 @@ open class XMLDecoder {
         
         let decoder = _XMLDecoder(referencing: topLevel, options: self.options)
         
-        guard let value: T = try decoder._unbox(topLevel) else {
+        guard let value: T = try decoder.unbox(topLevel) else {
             throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: [], debugDescription: "The given data did not contain a top-level value."))
         }
         
@@ -256,7 +256,7 @@ open class XMLDecoder {
         
         let decoder = _XMLDecoder(referencing: topLevel, options: self.options)
         
-        guard let value: T = try decoder._unbox(topLevel) else {
+        guard let value: T = try decoder.unbox(topLevel) else {
             throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: [], debugDescription: "The given data did not contain a top-level value."))
         }
         
@@ -342,8 +342,9 @@ extension _XMLDecoder : SingleValueDecodingContainer {
     public func decodeNil() -> Bool {
         return self.storage.topContainer is NSNull
     }
-    internal func _decode<T: XMLDecodable>() throws -> T {
-        try self.unbox(self.storage.topContainer)
+    
+    internal func _decode<T: Decodable>() throws -> T {
+        try unbox(storage.topContainer)
     }
     
     public func decode(_ type: Bool.Type) throws -> Bool { try _decode() }
@@ -360,7 +361,7 @@ extension _XMLDecoder : SingleValueDecodingContainer {
     public func decode(_ type: Float.Type) throws -> Float { try _decode() }
     public func decode(_ type: Double.Type) throws -> Double { try _decode() }
     public func decode(_ type: String.Type) throws -> String { try _decode() }
-    public func decode<T : Decodable>(_ type: T.Type) throws -> T { try self._unbox(self.storage.topContainer)! }
+    public func decode<T : Decodable>(_ type: T.Type) throws -> T { try _decode() }
 }
 
 // MARK: - Concrete Value Representations
@@ -372,53 +373,18 @@ extension _XMLDecoder {
             throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: self.codingPath, debugDescription: "Expected \(type) but found null value instead."))
         }
     }
-    
-    internal func unbox<T: XMLDecodable>(_ value: Any) throws -> T {
-        try expectNonNull(T.self)
-        return try T.unbox(value, decoder: self)
-    }
-    
-    internal func unbox<T: XMLDecodable>(_ value: Any, type: T.Type) throws -> T {
-        return try unbox(value)
-    }
-    
-    func unboxAttribute<T: XMLDecodable>(_ value: Any, type: T.Type) throws -> XMLAttributeProperty<T> {
-        return XMLAttributeProperty<T>(wrappedValue: try unbox(value))
-    }
-    internal func _unbox<T : Decodable>(_ value: Any) throws -> T? {
+
+    internal func unbox<T : Decodable>(_ value: Any) throws -> T {
         try expectNonNull(T.self)
         
-        //checking whether it's already a property to avoid running the full switch everytime
-        if T.self is AnyXMLAttributeProperty.Type {
-            
-            switch T.self {
-            case is XMLAttributeProperty<Bool>.Type: return try unboxAttribute(value, type: Bool.self) as? T
-            case is XMLAttributeProperty<Int>.Type: return try unboxAttribute(value, type: Int.self) as? T
-            case is XMLAttributeProperty<Int8>.Type: return try unboxAttribute(value, type: Int8.self) as? T
-            case is XMLAttributeProperty<Int16>.Type: return try unboxAttribute(value, type: Int16.self) as? T
-            case is XMLAttributeProperty<Int32>.Type: return try unboxAttribute(value, type: Int32.self) as? T
-            case is XMLAttributeProperty<Int64>.Type: return try unboxAttribute(value, type: Int64.self) as? T
-            case is XMLAttributeProperty<UInt>.Type: return try unboxAttribute(value, type: UInt.self) as? T
-            case is XMLAttributeProperty<UInt8>.Type: return try unboxAttribute(value, type: UInt8.self) as? T
-            case is XMLAttributeProperty<UInt16>.Type: return try unboxAttribute(value, type: UInt16.self) as? T
-            case is XMLAttributeProperty<UInt32>.Type: return try unboxAttribute(value, type: UInt32.self) as? T
-            case is XMLAttributeProperty<UInt64>.Type: return try unboxAttribute(value, type: UInt64.self) as? T
-            case is XMLAttributeProperty<Float>.Type: return try unboxAttribute(value, type: Float.self) as? T
-            case is XMLAttributeProperty<Double>.Type: return try unboxAttribute(value, type: Double.self) as? T
-            case is XMLAttributeProperty<String>.Type: return try unboxAttribute(value, type: String.self) as? T
-            case is XMLAttributeProperty<Date>.Type: return try unboxAttribute(value, type: Date.self) as? T
-            case is XMLAttributeProperty<Data>.Type: return try unboxAttribute(value, type: Data.self) as? T
-            case is XMLAttributeProperty<URL>.Type: return try unboxAttribute(value, type: URL.self) as? T
-            default: return nil
+        if let decodableType = T.self as? XMLDecodable.Type {
+            let value = try decodableType.unbox(value, decoder: self)
+            guard let typedValue = value as? T else {
+                throw DecodingError._typeMismatch(at: codingPath, expectation: T.self, reality: value.self)
             }
+            return typedValue
         }
-        
-        switch T.self {
-        case is Date.Type, is NSDate.Type: return try unbox(value, type: Date.self) as? T
-        case is Data.Type, is NSData.Type: return try unbox(value, type: Data.self) as? T
-        case is URL.Type, is NSURL.Type: return try unbox(value, type: URL.self) as? T
-        case is Decimal.Type, is NSDecimalNumber.Type: return try unbox(value, type: Decimal.self) as? T
-        default:
+        else {
             self.storage.push(container: value)
             defer { self.storage.popContainer() }
             return try T.init(from: self)
@@ -705,6 +671,12 @@ extension Date: XMLDecodable {
         }
     }
 }
+extension NSDate: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Self {
+        let date = try Date.unbox(value, decoder: decoder)
+        return Self(timeIntervalSince1970: date.timeIntervalSince1970)
+    }
+}
 
 extension Data: XMLDecodable {
     static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Data {
@@ -733,6 +705,9 @@ extension Data: XMLDecodable {
         }
     }
 }
+extension NSData: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Self { try Self(data: Data.unbox(value, decoder: decoder)) }
+}
 
 extension Decimal: XMLDecodable {
     static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Decimal {
@@ -751,5 +726,21 @@ extension URL: XMLDecodable {
                                                                     debugDescription: "Invalid URL string."))
         }
         return url
+    }
+}
+extension NSURL: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Self {
+        let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Double.self)
+        guard let url = Self(string: string) else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath,
+                                                                    debugDescription: "Invalid URL string."))
+        }
+        return url
+    }
+}
+
+extension XMLAttributeProperty: XMLDecodable where T: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> XMLAttributeProperty<T> {
+        return XMLAttributeProperty<T>(wrappedValue: try T.unbox(value, decoder: decoder))
     }
 }

@@ -220,10 +220,7 @@ open class XMLEncoder {
     /// - throws: An error if any value throws an error during encoding.
     open func encode<T : Encodable>(_ value: T, withRootKey rootKey: String, header: XMLHeader? = nil) throws -> Data {
         let encoder = _XMLEncoder(options: self.options)
-        
-        guard let topLevel = try encoder.box_(value) else {
-            throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: [], debugDescription: "Top-level \(T.self) did not encode any values."))
-        }
+        let topLevel = try encoder.box(value)
         
         if topLevel is NSNull {
             throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: [], debugDescription: "Top-level \(T.self) encoded as null XML fragment."))
@@ -366,24 +363,6 @@ fileprivate struct _XMLKeyedEncodingContainer<K : CodingKey> : KeyedEncodingCont
         self.container[_converted(key).stringValue] = NSNull()
     }
     
-    private mutating func _encode<T: AnyObjectable>(_ value: T, forKey key: Key) throws where T: Encodable {
-        self.encoder.codingPath.append(key)
-        defer { self.encoder.codingPath.removeLast() }
-        
-        if let boxedValue = try self.encoder.boxIfAttribute(value) {
-            if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = boxedValue
-            } else {
-                let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = boxedValue
-                self.container[_XMLElement.attributesKey] = attributesContainer
-            }
-        }
-        else {
-            self.container[_converted(key).stringValue] = try self.encoder.box(value)
-        }
-    }
-    
     public mutating func encode(_ value: Bool, forKey key: Key) throws { try _encode(value, forKey: key) }
     public mutating func encode(_ value: Int, forKey key: Key) throws { try _encode(value, forKey: key) }
     public mutating func encode(_ value: Int8, forKey key: Key) throws { try _encode(value, forKey: key) }
@@ -398,27 +377,26 @@ fileprivate struct _XMLKeyedEncodingContainer<K : CodingKey> : KeyedEncodingCont
     public mutating func encode(_ value: String, forKey key: Key) throws { try _encode(value, forKey: key) }
     public mutating func encode(_ value: Float, forKey key: Key) throws { try _encode(value, forKey: key) }
     public mutating func encode(_ value: Double, forKey key: Key) throws { try _encode(value, forKey: key) }
+    public mutating func encode<T : Encodable>(_ value: T, forKey key: Key) throws { try _encode(value, forKey: key) }
     
-    public mutating func encode<T : Encodable>(_ value: T, forKey key: Key) throws {
+    private mutating func _encode<T: Encodable>(_ value: T, forKey key: Key) throws {
         self.encoder.codingPath.append(key)
         defer { self.encoder.codingPath.removeLast() }
-        if let boxedValue = try self.encoder.boxIfAttribute(value) {
+        if value is AnyXMLAttributeProperty {
             if let attributesContainer = self.container[_XMLElement.attributesKey] as? NSMutableDictionary {
-                attributesContainer[_converted(key).stringValue] = boxedValue
+                attributesContainer[_converted(key).stringValue] = try encoder.box(value)
             } else {
                 let attributesContainer = NSMutableDictionary()
-                attributesContainer[_converted(key).stringValue] = boxedValue
+                attributesContainer[_converted(key).stringValue] = try encoder.box(value)
                 self.container[_XMLElement.attributesKey] = attributesContainer
             }
         }
-        else if T.self == Date.self || T.self == NSDate.self {
-            self.container[_converted(key).stringValue] = try self.encoder.box(value)
-        } else {
+        else {
             self.container[_converted(key).stringValue] = try self.encoder.box(value)
         }
     }
     
-
+    
     
     public mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> {
         let dictionary = NSMutableDictionary()
@@ -476,7 +454,7 @@ fileprivate struct _XMLUnkeyedEncodingContainer : UnkeyedEncodingContainer {
     }
     
     // MARK: - UnkeyedEncodingContainer Methods
-    private mutating func _encode<T: AnyObjectable>(_ value: T) throws where T: Encodable {
+    private mutating func _encode<T: XMLEncodable>(_ value: T) throws where T: Encodable {
         self.encoder.codingPath.append(_XMLKey(index: self.count))
         defer { self.encoder.codingPath.removeLast() }
         self.container.add(try self.encoder.box(value))
@@ -540,7 +518,7 @@ extension _XMLEncoder: SingleValueEncodingContainer {
         self.storage.push(container: NSNull())
     }
     
-    private func _encode<T: AnyObjectable>(_ value: T) throws where T: Encodable {
+    private func _encode<T: XMLEncodable>(_ value: T) throws where T: Encodable {
         assertCanEncodeNewValue()
         self.storage.push(container: try self.box(value))
     }
@@ -566,115 +544,13 @@ extension _XMLEncoder: SingleValueEncodingContainer {
     }
 }
 
-internal protocol AnyObjectable {
-    var asAnyObject: AnyObject { get }
-}
-extension Bool: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension Int: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension Int8: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension Int16: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension Int32: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension Int64: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension UInt: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension UInt8: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension UInt16: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension UInt32: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension UInt64: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension Float: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension Double: AnyObjectable { var asAnyObject: AnyObject { NSNumber(value: self) } }
-extension String: AnyObjectable { var asAnyObject: AnyObject { NSString(string: self) } }
-
 extension _XMLEncoder {
-    /// Returns the given value boxed in a container appropriate for pushing onto the container stack.
-    fileprivate func box<T: AnyObjectable>(_ value: T) throws -> AnyObject where T: Encodable { value.asAnyObject }
-    
-    private func _box<T: BinaryFloatingPoint>(_ value: T, infinity: T) throws -> AnyObject where T: AnyObjectable {
-        if value.isInfinite || value.isNaN {
-            guard case let .convertToString(positiveInfinity: posInfString, negativeInfinity: negInfString, nan: nanString) = self.options.nonConformingFloatEncodingStrategy else {
-                throw EncodingError._invalidFloatingPointValue(value, at: codingPath)
-            }
-            
-            if value == infinity {
-                return posInfString as AnyObject
-            } else if value == -infinity {
-                return negInfString as AnyObject
-            } else {
-                return nanString as AnyObject
-            }
-        } else {
-            return value.asAnyObject
-        }
-    }
-    
-    internal func box(_ value: Float) throws -> AnyObject { try _box(value, infinity: Float.infinity) }
-    internal func box(_ value: Double) throws -> AnyObject { try _box(value, infinity: Double.infinity) }
-    
-    internal func box(_ value: Date) throws -> AnyObject {
-        switch self.options.dateEncodingStrategy {
-        case .deferredToDate:
-            try value.encode(to: self)
-            return self.storage.popContainer()
-        case .secondsSince1970:
-            return NSNumber(value: value.timeIntervalSince1970)
-        case .millisecondsSince1970:
-            return NSNumber(value: value.timeIntervalSince1970 * 1000.0)
-        case .iso8601:
-            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
-                return _iso8601Formatter.string(from: value) as AnyObject
-            } else {
-                fatalError("ISO8601DateFormatter is unavailable on this platform.")
-            }
-        case .formatted(let formatter):
-            return formatter.string(from: value) as AnyObject
-        case .custom(let closure):
-            let depth = self.storage.count
-            try closure(value, self)
-
-            guard self.storage.count > depth else { return NSDictionary() }
-
-            return self.storage.popContainer()
-        }
-    }
-    
-    internal func box(_ value: Data) throws -> AnyObject {
-        switch self.options.dataEncodingStrategy {
-        case .deferredToData:
-            try value.encode(to: self)
-            return self.storage.popContainer()
-        case .base64:
-            return value.base64EncodedString() as AnyObject
-        case .custom(let closure):
-            let depth = self.storage.count
-            try closure(value, self)
-
-            guard self.storage.count > depth else { return NSDictionary() }
-
-            return self.storage.popContainer() as AnyObject
-        }
-    }
-    
-    fileprivate func box<T : Encodable>(_ value: T) throws -> AnyObject {
-        return try self.box_(value) ?? NSDictionary()
-    }
     
     // This method is called "box_" instead of "box" to disambiguate it from the overloads. Because the return type here is different from all of the "box" overloads (and is more general), any "box" calls in here would call back into "box" recursively instead of calling the appropriate overload, which is not what we want.
-    fileprivate func box_<T : Encodable>(_ value: T) throws -> AnyObject? {
+    fileprivate func box<T : Encodable>(_ value: T) throws -> AnyObject {
         
-        // Should convert when Date or NSDate
-        if let valueAsDate = value as? Date {
-            return try self.box(valueAsDate)
-        }
-        // Should convert when Data or NSData
-        if let valueAsData = value as? Data {
-            return try self.box(valueAsData)
-        }
-        // Should convert when URL or NSURL
-        if let valueAsURL = value as? URL {
-            return try self.box(valueAsURL)
-        }
-        // Should convert when Decimal or NSDecimalNumber
-        if let valueAsDecimalNumber = value as? NSDecimalNumber {
-            return valueAsDecimalNumber
+        if let valueAsXMLEncodable = value as? XMLEncodable {
+            return try valueAsXMLEncodable.asAnyObject(encoder: self)
         }
         
         let depth = self.storage.count
@@ -682,78 +558,117 @@ extension _XMLEncoder {
         
         // The top container should be a new container.
         guard self.storage.count > depth else {
-            return nil
+            return NSDictionary()
         }
         
         return self.storage.popContainer()
     }
-    
-    private func _box<ValueType, AttributeType>(_ value: ValueType) -> AttributeType? where AttributeType: Codable {
-        guard let wrapper = value as? XMLAttributeProperty<AttributeType> else {
-            return nil
-        }
-        return wrapper.wrappedValue
-    }
-    
-    fileprivate func boxIfAttribute<T>(_ value: T) throws -> AnyObject?  {
-        guard value is AnyXMLAttributeProperty else {
-            return nil
-        }
-        switch type(of:value) {
-        case is XMLAttributeProperty<Bool>.Type:
-            guard let wrappedValue: Bool = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<Int>.Type:
-            guard let wrappedValue: Int = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<Int8>.Type:
-            guard let wrappedValue: Int8 = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<Int16>.Type:
-            guard let wrappedValue: Int16 = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<Int32>.Type:
-            guard let wrappedValue: Int32 = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<Int64>.Type:
-            guard let wrappedValue: Int64 = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<UInt>.Type:
-            guard let wrappedValue: UInt = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<UInt8>.Type:
-            guard let wrappedValue: UInt8 = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<UInt16>.Type:
-            guard let wrappedValue: UInt16 = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<UInt32>.Type:
-            guard let wrappedValue: UInt32 = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<UInt64>.Type:
-            guard let wrappedValue: UInt64 = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<String>.Type:
-            guard let wrappedValue: String = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<Float>.Type:
-            guard let wrappedValue: Float = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<Double>.Type:
-            guard let wrappedValue: Double = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<Data>.Type:
-            guard let wrappedValue: Data = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<Date>.Type:
-            guard let wrappedValue: Date = _box(value) else { return nil }
-            return try box(wrappedValue)
-        case is XMLAttributeProperty<URL>.Type:
-            guard let wrappedValue: URL = _box(value) else { return nil }
-            return try box(wrappedValue)
-        default:
-            return nil
+}
+
+internal protocol XMLEncodable {
+    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject
+}
+
+extension XMLEncodable where Self: BinaryFloatingPoint {
+    func asAnyObject(infinity: Self, encoder: _XMLEncoder, converter: (Self) -> AnyObject) throws -> AnyObject {
+        
+        switch encoder.options.nonConformingFloatEncodingStrategy {
+        case .convertToString(let posInfString, let negInfString, let nanString) where isInfinite || isNaN:
+            switch self {
+            case infinity: return posInfString as AnyObject
+            case -infinity:return negInfString as AnyObject
+            default: return nanString as AnyObject
+            }
+        default: return converter(self)
         }
     }
 }
+
+extension XMLAttributeProperty: XMLEncodable where T: XMLEncodable {
+    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { try wrappedValue.asAnyObject(encoder: encoder) }
+}
+
+
+extension Bool: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension Int: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension Int8: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension Int16: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension Int32: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension Int64: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension UInt: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension UInt8: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension UInt16: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension UInt32: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension UInt64: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
+extension String: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSString(string: self) } }
+extension NSDecimalNumber: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { self } }
+
+extension URL: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { return try  absoluteString.asAnyObject(encoder: encoder)  } }
+extension NSURL: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { return try (self as URL).asAnyObject(encoder: encoder) } }
+
+extension Float: XMLEncodable {
+    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject {
+        try asAnyObject(infinity: Float.infinity, encoder: encoder, converter: NSNumber.init(value:))
+    }
+}
+
+extension Double: XMLEncodable {
+    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject {
+        try asAnyObject(infinity: Double.infinity, encoder: encoder, converter: NSNumber.init(value:))
+    }
+}
+
+
+    
+extension Date: XMLEncodable {
+    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject {
+        switch encoder.options.dateEncodingStrategy {
+        case .deferredToDate:
+            try self.encode(to: encoder)
+            return encoder.storage.popContainer()
+        case .secondsSince1970:
+            return NSNumber(value: timeIntervalSince1970)
+        case .millisecondsSince1970:
+            return NSNumber(value: timeIntervalSince1970 * 1000.0)
+        case .iso8601:
+            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
+                return _iso8601Formatter.string(from: self) as AnyObject
+            } else {
+                fatalError("ISO8601DateFormatter is unavailable on this platform.")
+            }
+        case .formatted(let formatter):
+            return formatter.string(from: self) as AnyObject
+        case .custom(let closure):
+            let depth = encoder.storage.count
+            try closure(self, encoder)
+
+            guard encoder.storage.count > depth else { return NSDictionary() }
+
+            return encoder.storage.popContainer()
+        }
+    }
+}
+extension NSDate: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { return try (self as Date).asAnyObject(encoder: encoder) } }
+
+extension Data: XMLEncodable {
+    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject {
+        switch encoder.options.dataEncodingStrategy {
+        case .deferredToData:
+            try self.encode(to: encoder)
+            return encoder.storage.popContainer()
+        case .base64:
+            return self.base64EncodedString() as AnyObject
+        case .custom(let closure):
+            let depth = encoder.storage.count
+            try closure(self, encoder)
+
+            guard encoder.storage.count > depth else { return NSDictionary() }
+
+            return encoder.storage.popContainer() as AnyObject
+        }
+    }
+}
+extension NSData: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { try (self as Data).asAnyObject(encoder: encoder) } }
+
+
 

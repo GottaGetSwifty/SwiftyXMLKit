@@ -40,28 +40,10 @@ internal struct _XMLUnkeyedDecodingContainer : UnkeyedDecodingContainer {
     }
     
     public var isAtEnd: Bool {
-        return self.currentIndex >= self.count!
+        return self.currentIndex >= count!
     }
     
-    public mutating func decodeNil() throws -> Bool {
-        guard !self.isAtEnd else {
-            throw DecodingError.valueNotFound(Any?.self, DecodingError.Context(codingPath: self.decoder.codingPath + [_XMLKey(index: self.currentIndex)], debugDescription: "Unkeyed container is at end."))
-        }
-        
-        if self.container[self.currentIndex] is NSNull {
-            self.currentIndex += 1
-            return true
-        } else {
-            return false
-        }
-    }
-    
-    mutating internal func _decode<T: XMLDecodable>() throws -> T {
-        try _decode({ try self.decoder.unbox($0) }) { currentIndex += 1 }
-    }
-    
-    /// - Parameter runWhenFinished: Used to allow mutating things to be passed in
-    private func _decode<T>(_ getValue: (Any) throws -> T?, runWhenFinished: () -> ()) throws -> T {
+    private mutating func _decode<T: Decodable>() throws -> T {
         guard !self.isAtEnd else {
             throw DecodingError.valueNotFound(T.self, DecodingError.Context(codingPath: self.decoder.codingPath + [_XMLKey(index: self.currentIndex)], debugDescription: "Unkeyed container is at end."))
         }
@@ -69,31 +51,40 @@ internal struct _XMLUnkeyedDecodingContainer : UnkeyedDecodingContainer {
         self.decoder.codingPath.append(_XMLKey(index: self.currentIndex))
         defer { self.decoder.codingPath.removeLast() }
         let value = self.container[self.currentIndex]
-        guard let decoded: T = try getValue(value) else {
-            throw DecodingError.valueNotFound(T.self, DecodingError.Context(codingPath: self.decoder.codingPath + [_XMLKey(index: self.currentIndex)], debugDescription: "Expected \(T.self) but found null instead."))
-        }
+        let decoded: T = try decoder.unbox(value)
         
+        currentIndex += 1
         return decoded
     }
     
-    public mutating func decode(_ type: Bool.Type) throws -> Bool { try self._decode() }
-    public mutating func decode(_ type: Int.Type) throws -> Int { try self._decode() }
-    public mutating func decode(_ type: Int8.Type) throws -> Int8 { try self._decode() }
-    public mutating func decode(_ type: Int16.Type) throws -> Int16 { try self._decode() }
-    public mutating func decode(_ type: Int32.Type) throws -> Int32 { try self._decode() }
-    public mutating func decode(_ type: Int64.Type) throws -> Int64 { try self._decode() }
-    public mutating func decode(_ type: UInt.Type) throws -> UInt { try self._decode() }
-    public mutating func decode(_ type: UInt8.Type) throws -> UInt8 { try self._decode() }
-    public mutating func decode(_ type: UInt16.Type) throws -> UInt16 { try self._decode() }
-    public mutating func decode(_ type: UInt32.Type) throws -> UInt32 { try self._decode() }
-    public mutating func decode(_ type: UInt64.Type) throws -> UInt64 { try self._decode() }
-    public mutating func decode(_ type: Float.Type) throws -> Float { try self._decode() }
-    public mutating func decode(_ type: Double.Type) throws -> Double { try self._decode() }
-    public mutating func decode(_ type: String.Type) throws -> String { try self._decode() }
-    
-    public mutating func decode<T : Decodable>(_ type: T.Type) throws -> T {
-        try self._decode({ try self.decoder._unbox($0) }) { self.currentIndex += 1 }
+    public mutating func decodeNil() throws -> Bool {
+        guard !self.isAtEnd else {
+            throw DecodingError.valueNotFound(Any?.self, DecodingError.Context(codingPath: self.decoder.codingPath + [_XMLKey(index: self.currentIndex)], debugDescription: "Unkeyed container is at end."))
+        }
+        
+        if container[self.currentIndex] is NSNull {
+            currentIndex += 1
+            return true
+        } else {
+            return false
+        }
     }
+    
+    public mutating func decode(_ type: Bool.Type) throws -> Bool { try _decode() }
+    public mutating func decode(_ type: Int.Type) throws -> Int { try _decode() }
+    public mutating func decode(_ type: Int8.Type) throws -> Int8 { try _decode() }
+    public mutating func decode(_ type: Int16.Type) throws -> Int16 { try _decode() }
+    public mutating func decode(_ type: Int32.Type) throws -> Int32 { try _decode() }
+    public mutating func decode(_ type: Int64.Type) throws -> Int64 { try _decode() }
+    public mutating func decode(_ type: UInt.Type) throws -> UInt { try _decode() }
+    public mutating func decode(_ type: UInt8.Type) throws -> UInt8 { try _decode() }
+    public mutating func decode(_ type: UInt16.Type) throws -> UInt16 { try _decode() }
+    public mutating func decode(_ type: UInt32.Type) throws -> UInt32 { try _decode() }
+    public mutating func decode(_ type: UInt64.Type) throws -> UInt64 { try _decode() }
+    public mutating func decode(_ type: Float.Type) throws -> Float { try _decode() }
+    public mutating func decode(_ type: Double.Type) throws -> Double { try _decode() }
+    public mutating func decode(_ type: String.Type) throws -> String { try _decode() }
+    public mutating func decode<T : Decodable>(_ type: T.Type) throws -> T { try _decode()}
     
     public mutating func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> {
         self.decoder.codingPath.append(_XMLKey(index: self.currentIndex))
