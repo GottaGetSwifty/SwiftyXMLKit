@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import SWXMLHash
 //===----------------------------------------------------------------------===//
 // XML Decoder
 //===----------------------------------------------------------------------===//
@@ -216,23 +215,9 @@ open class XMLDecoder {
     /// - returns: A value of the requested type.
     /// - throws: `DecodingError.dataCorrupted` if values requested from the payload are corrupted, or if the given data is not valid XML.
     /// - throws: An error if any value throws an error during decoding.
-    open func decode<T : Decodable>(_ type: T.Type, from data: Data) throws -> T {
-        let topLevel: [String: Any]
-        do {
-            topLevel = try _XMLStackParser.parse(with: data)
-        } catch {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "The given data was not valid XML.", underlyingError: error))
-        }
-        
-        let decoder = _XMLDecoder(referencing: topLevel, options: self.options)
-        
-        guard let value: T = try decoder.unbox(topLevel) else {
-            throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: [], debugDescription: "The given data did not contain a top-level value."))
-        }
-        
-        return value
+    open func decode<T : Decodable>(from data: Data) throws -> T {
+        try decode(T.self, from: data)
     }
-    
     // MARK: - Decoding Values
     /// Decodes a top-level value of the given type from the given XML representation.
     ///
@@ -241,12 +226,7 @@ open class XMLDecoder {
     /// - returns: A value of the requested type.
     /// - throws: `DecodingError.dataCorrupted` if values requested from the payload are corrupted, or if the given data is not valid XML.
     /// - throws: An error if any value throws an error during decoding.
-    open func decodeNew<T : Decodable>(_ type: T.Type, from data: Data) throws -> T {
-        let parser = _XMLParser(data: data)
-        
-        let xml = parser.indexer.children[0]
-//        print(xml)
-        
+    open func decode<T : Decodable>(_ type: T.Type, from data: Data) throws -> T {
         let topLevel: [String: Any]
         do {
             topLevel = try _XMLStackParser.parse(with: data)
@@ -582,8 +562,9 @@ extension Float: XMLDecodable {
             case posInfString: return Float.infinity
             case negInfString: return -Float.infinity
             case nanString: return Float.nan
-            default: throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Float.self, reality: value)
+            default: break
             }
+            fallthrough
         default:
             let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: Int.self)
             let double = number.doubleValue
@@ -606,8 +587,9 @@ extension Double: XMLDecodable {
             case posInfString: return Double.infinity
             case negInfString: return -Double.infinity
             case nanString: return Double.nan
-            default: throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Double.self, reality: value)
+            default: break
             }
+            fallthrough
         default:
             guard let number = Decimal(string: string) as NSDecimalNumber?,
                 number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
@@ -616,6 +598,15 @@ extension Double: XMLDecodable {
             
             return number.doubleValue
         }
+    }
+}
+
+extension Decimal: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Decimal {
+        
+        // Attempt to bridge from NSDecimalNumber.
+        let doubleValue: Double = try Double.unbox(value, decoder: decoder)
+        return Decimal(doubleValue)
     }
 }
 
@@ -707,15 +698,6 @@ extension Data: XMLDecodable {
 }
 extension NSData: XMLDecodable {
     static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Self { try Self(data: Data.unbox(value, decoder: decoder)) }
-}
-
-extension Decimal: XMLDecodable {
-    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Decimal {
-        
-        // Attempt to bridge from NSDecimalNumber.
-        let doubleValue: Double = try Double.unbox(value, decoder: decoder)
-        return Decimal(doubleValue)
-    }
 }
 
 extension URL: XMLDecodable {

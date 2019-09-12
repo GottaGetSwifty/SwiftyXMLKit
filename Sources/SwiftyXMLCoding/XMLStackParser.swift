@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import SWXMLHash
 
 //===----------------------------------------------------------------------===//
 // Data Representation
@@ -55,20 +54,6 @@ public struct XMLHeader {
         return string.trimmingCharacters(in: .whitespaces) + "?>\n"
     }
 }
-
-internal struct _XMLParser {
-    
-    static var standardHasher = SWXMLHash.config({_ in})
-    
-    private var xmlHash: SWXMLHash
-    var indexer: XMLIndexer
-    
-    init(data: Data, xmlHash: SWXMLHash = _XMLParser.standardHasher) {
-        self.xmlHash = xmlHash
-        self.indexer = xmlHash.parse(data)
-    }
-}
-
 
 internal class _XMLElement {
     static let attributesKey = "___ATTRIBUTES"

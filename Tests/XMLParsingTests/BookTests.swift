@@ -63,7 +63,7 @@ private let bookResult = Book(id: "bk101", author: "Gambardella, Matthew", title
 private let bookXML = """
 <?xml version="1.0"?>
 <book id="bk101">
-<author>Gambardella, Matthew</author>
+    <author>Gambardella, Matthew</author>
     <description>An in-depth look at creating applications with XML.</description>
     <genre>Computer</genre>
     <price>44.95</price>
