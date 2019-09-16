@@ -17,6 +17,15 @@ public struct XMLAttributeProperty<T: Codable>: Codable, AnyXMLAttributeProperty
     public init(wrappedValue: T) {
         self.wrappedValue = wrappedValue
     }
+    
+    public init(from decoder: Decoder) throws {
+        let value = try T(from: decoder)
+        self.init(wrappedValue: value)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        try wrappedValue.encode(to: encoder)
+    }
 }
 extension XMLAttributeProperty: Equatable where T: Equatable { }
 

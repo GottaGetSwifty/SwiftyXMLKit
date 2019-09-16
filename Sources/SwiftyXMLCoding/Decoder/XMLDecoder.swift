@@ -3,7 +3,8 @@
 //  XMLParsing
 //
 //  Created by Shawn Moore on 11/20/17.
-//  Copyright © 2017 Shawn Moore. All rights reserved.
+//  Largely re-written by PJ Fechner 09/2019
+//  Copyright © 2019 PJ Fechner. All rights reserved.
 //
 
 import Foundation

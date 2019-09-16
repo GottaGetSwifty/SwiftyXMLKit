@@ -1,8 +1,9 @@
 //
-//  File.swift
+//  XMLEncodableDateTests.swift
 //  
 //
-//  Created by Paul Fechner Jr on 9/5/19.
+//  Created by PJ Fechner on 9/5/19.
+//  Copyright © 2019 PJ Fechner. All rights reserved.
 //
 
 @testable import SwiftyXMLCoding

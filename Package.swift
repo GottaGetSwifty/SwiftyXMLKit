@@ -24,7 +24,7 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "SwiftyXMLCoding",
-            dependencies: ["SWXMLHash"]),
+            dependencies: [/*"SWXMLHash"*/]),
         .testTarget(
             name: "XMLParsingTests",
             dependencies: ["SwiftyXMLCoding", "Quick", "Nimble", "SWXMLHash"]),
