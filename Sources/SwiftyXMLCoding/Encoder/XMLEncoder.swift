@@ -222,6 +222,7 @@ open class XMLEncoder {
         let encoder = _XMLEncoder(options: self.options)
         let topLevel = try encoder.box(value)
         
+        #if os(iOS) || os(macOS)
         if topLevel is NSNull {
             throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: [], debugDescription: "Top-level \(T.self) encoded as null XML fragment."))
         } else if topLevel is NSNumber {
@@ -229,7 +230,8 @@ open class XMLEncoder {
         } else if topLevel is NSString {
             throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: [], debugDescription: "Top-level \(T.self) encoded as string XML fragment."))
         }
-        
+//
+        #endif
         guard let element = _XMLElement.createRootElement(rootKey: rootKey, object: topLevel) else {
             throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: [], debugDescription: "Unable to encode the given top-level value to XML."))
         }
@@ -547,10 +549,10 @@ extension _XMLEncoder: SingleValueEncodingContainer {
 extension _XMLEncoder {
     
     // This method is called "box_" instead of "box" to disambiguate it from the overloads. Because the return type here is different from all of the "box" overloads (and is more general), any "box" calls in here would call back into "box" recursively instead of calling the appropriate overload, which is not what we want.
-    fileprivate func box<T : Encodable>(_ value: T) throws -> AnyObject {
+    fileprivate func box<T : Encodable>(_ value: T) throws -> Any {
         
         if let valueAsXMLEncodable = value as? XMLEncodable {
-            return try valueAsXMLEncodable.asAnyObject(encoder: self)
+            return try valueAsXMLEncodable.encodeAsAny(encoder: self)
         }
         
         let depth = self.storage.count
@@ -558,7 +560,7 @@ extension _XMLEncoder {
         
         // The top container should be a new container.
         guard self.storage.count > depth else {
-            return NSDictionary()
+            return [String:Any]()
         }
         
         return self.storage.popContainer()
@@ -566,70 +568,69 @@ extension _XMLEncoder {
 }
 
 internal protocol XMLEncodable {
-    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any
 }
 
 extension XMLEncodable where Self: BinaryFloatingPoint {
-    func asAnyObject(infinity: Self, encoder: _XMLEncoder, converter: (Self) -> AnyObject) throws -> AnyObject {
+    func asAnyObject(infinity: Self, encoder: _XMLEncoder) throws -> Any {
         
         switch encoder.options.nonConformingFloatEncodingStrategy {
         case .convertToString(let posInfString, let negInfString, let nanString) where isInfinite || isNaN:
             switch self {
-            case infinity: return posInfString as AnyObject
-            case -infinity:return negInfString as AnyObject
-            default: return nanString as AnyObject
+            case infinity: return posInfString as Any
+            case -infinity:return negInfString as Any
+            default: return nanString as Any
             }
-        default: return converter(self)
+        default: return "\(self)"
         }
     }
 }
 
 extension XMLAttributeProperty: XMLEncodable where T: XMLEncodable {
-    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { try wrappedValue.asAnyObject(encoder: encoder) }
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { try wrappedValue.encodeAsAny(encoder: encoder) }
 }
 
+extension Bool: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension Int: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension Int8: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension Int16: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension Int32: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension Int64: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension UInt: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension UInt8: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension UInt16: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension UInt32: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension UInt64: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension String: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { self } }
+extension NSDecimalNumber: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { self } }
 
-extension Bool: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension Int: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension Int8: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension Int16: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension Int32: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension Int64: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension UInt: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension UInt8: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension UInt16: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension UInt32: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension UInt64: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSNumber(value: self) } }
-extension String: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { NSString(string: self) } }
-extension NSDecimalNumber: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { self } }
+extension Decimal: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { self as NSDecimalNumber } }
 
-extension URL: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { return try  absoluteString.asAnyObject(encoder: encoder)  } }
-extension NSURL: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { return try (self as URL).asAnyObject(encoder: encoder) } }
+extension URL: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { return try  absoluteString.encodeAsAny(encoder: encoder)  } }
+extension NSURL: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { return try (self as URL).encodeAsAny(encoder: encoder) } }
 
 extension Float: XMLEncodable {
-    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject {
-        try asAnyObject(infinity: Float.infinity, encoder: encoder, converter: NSNumber.init(value:))
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
+        try asAnyObject(infinity: Float.infinity, encoder: encoder)
     }
 }
 
 extension Double: XMLEncodable {
-    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject {
-        try asAnyObject(infinity: Double.infinity, encoder: encoder, converter: NSNumber.init(value:))
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
+        try asAnyObject(infinity: Double.infinity, encoder: encoder)
     }
 }
 
-
-    
 extension Date: XMLEncodable {
-    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject {
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
         switch encoder.options.dateEncodingStrategy {
         case .deferredToDate:
             try self.encode(to: encoder)
             return encoder.storage.popContainer()
         case .secondsSince1970:
-            return NSNumber(value: timeIntervalSince1970)
+            return "\(timeIntervalSince1970)"
         case .millisecondsSince1970:
-            return NSNumber(value: timeIntervalSince1970 * 1000.0)
+            return "\(timeIntervalSince1970 * 1000.0)"
         case .iso8601:
             if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
                 return _iso8601Formatter.string(from: self) as AnyObject
@@ -642,16 +643,16 @@ extension Date: XMLEncodable {
             let depth = encoder.storage.count
             try closure(self, encoder)
 
-            guard encoder.storage.count > depth else { return NSDictionary() }
+            guard encoder.storage.count > depth else { return [String:Any]() }
 
             return encoder.storage.popContainer()
         }
     }
 }
-extension NSDate: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { return try (self as Date).asAnyObject(encoder: encoder) } }
+extension NSDate: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { return try (self as Date).encodeAsAny(encoder: encoder) } }
 
 extension Data: XMLEncodable {
-    func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject {
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
         switch encoder.options.dataEncodingStrategy {
         case .deferredToData:
             try self.encode(to: encoder)
@@ -662,13 +663,10 @@ extension Data: XMLEncodable {
             let depth = encoder.storage.count
             try closure(self, encoder)
 
-            guard encoder.storage.count > depth else { return NSDictionary() }
+            guard encoder.storage.count > depth else { return [String:Any]() }
 
             return encoder.storage.popContainer() as AnyObject
         }
     }
 }
-extension NSData: XMLEncodable { func asAnyObject(encoder: _XMLEncoder) throws -> AnyObject { try (self as Data).asAnyObject(encoder: encoder) } }
-
-
-
+extension NSData: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { try (self as Data).encodeAsAny(encoder: encoder) } }

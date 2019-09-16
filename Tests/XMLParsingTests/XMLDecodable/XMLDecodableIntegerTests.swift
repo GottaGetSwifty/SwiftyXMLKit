@@ -24,7 +24,7 @@ private func mockDecoder(options: XMLDecoder._Options) -> _XMLDecoder {
 
 private let mockOptions = XMLDecoder().options
 
-class XMLDecoderIntegerTests: QuickSpec {
+class XMLDecodableIntegerTests: QuickSpec {
 
     
     func testSignedFixedWidthInt<T: FixedWidthInteger>(type: T.Type) where T: Decodable, T: SignedInteger, T: XMLDecodable {
@@ -69,7 +69,7 @@ class XMLDecoderIntegerTests: QuickSpec {
     }
     
     override func spec() {
-        describe("XMLDecoder") {
+        describe("XMLDecodable") {
             describe("DecodesSingleValueCorrectly") {
                 context("WhenItemIs") {
                     describe("Int") {

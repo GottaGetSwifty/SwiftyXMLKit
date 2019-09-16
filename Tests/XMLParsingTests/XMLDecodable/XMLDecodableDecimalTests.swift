@@ -24,10 +24,10 @@ private func mockDecoder(options: XMLDecoder._Options) -> _XMLDecoder {
 
 private let mockOptions = XMLDecoder().options
 
-class XMLDecoderDecimalTests: QuickSpec {
+class XMLDecodableDecimalTests: QuickSpec {
     
     override func spec() {
-        describe("XMLDecoder") {
+        describe("XMLDecodable") {
             describe("DecodesSingleValueCorrectly") {
                 context("WhenItemIs") {
                     describe("Float") {

@@ -19,6 +19,7 @@ struct Catalog: Codable {
 
 struct Book: Codable, Equatable {
     @XMLAttributeProperty var id: String
+    var order: Int
     var author: String
     var title: String
     var genre: Genre
@@ -27,7 +28,7 @@ struct Book: Codable, Equatable {
     var description: String
     
     enum CodingKeys: String, CodingKey {
-        case id, author, title, genre, price, description
+        case id, order, author, title, genre, price, description
         case publishDate = "publish_date"
     }
 }

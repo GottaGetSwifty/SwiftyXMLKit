@@ -128,7 +128,7 @@ open class XMLDecoder {
             guard !stringKey.isEmpty else { return stringKey }
             
             // Find the first non-underscore character
-            guard let firstNonUnderscore = stringKey.index(where: { $0 != "_" }) else {
+            guard let firstNonUnderscore = stringKey.firstIndex(where: { $0 != "_" }) else {
                 // Reached the end without finding an _
                 return stringKey
             }
@@ -171,7 +171,7 @@ open class XMLDecoder {
     }
     
     /// The strategy to use in decoding dates. Defaults to `.secondsSince1970`.
-    open var dateDecodingStrategy: DateDecodingStrategy = .secondsSince1970
+    open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
     
     /// The strategy to use in decoding binary data. Defaults to `.base64`.
     open var dataDecodingStrategy: DataDecodingStrategy = .base64

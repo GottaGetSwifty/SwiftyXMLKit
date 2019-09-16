@@ -34,6 +34,7 @@ class BookTests: QuickSpec {
         expect(left.id) == right.id
         expect(left.author) == right.author
         expect(left.title) == right.title
+        expect(left.order) == right.order
         expect(left.genre) == right.genre
         expect(left.price) ≈ right.price
         expect(left.publishDate) == right.publishDate
@@ -59,13 +60,14 @@ class BookTests: QuickSpec {
     }
 }
 
-private let bookResult = Book(id: "bk101", author: "Gambardella, Matthew", title: "XML Developer's Guide", genre: .computer, price: 44.95, publishDate: formatter.date(from: "2000-10-01")!, description: "An in-depth look at creating applications with XML.")
+private let bookResult = Book(id: "bk101", order: 1, author: "Gambardella, Matthew", title: "XML Developer's Guide", genre: .computer, price: 44.95, publishDate: formatter.date(from: "2000-10-01")!, description: "An in-depth look at creating applications with XML.")
 private let bookXML = """
 <?xml version="1.0"?>
 <book id="bk101">
     <author>Gambardella, Matthew</author>
     <description>An in-depth look at creating applications with XML.</description>
     <genre>Computer</genre>
+    <order>1</order>
     <price>44.95</price>
     <publish_date>2000-10-01</publish_date>
     <title>XML Developer&apos;s Guide</title>

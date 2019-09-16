@@ -24,10 +24,10 @@ private func mockDecoder(options: XMLDecoder._Options) -> _XMLDecoder {
 
 private let mockOptions = XMLDecoder().options
 
-class XMLDecoderBasicTests: QuickSpec {
+class XMLDecodableBasicTests: QuickSpec {
     
     override func spec() {
-        describe("XMLDecoder") {
+        describe("XMLDecodable") {
             describe("DecodesSingleValueCorrectly") {
                 context("WhenItemIs") {
                     describe("Bool") {
@@ -79,21 +79,53 @@ class XMLDecoderBasicTests: QuickSpec {
                     }
                     describe("String") {
                         let _decoder = mockDecoder(options: mockOptions)
-                        it("Decodes`hi`") {
+                        it("Decodes'hi'") {
                             expect { _ = try String.unbox("hi", decoder: _decoder) }.toNot(throwError())
                             let value = try! String.unbox("hi", decoder: _decoder)
                             expect(value) == "hi"
                         }
-                        it("Decodes``") {
+                        it("Decodes''") {
                             expect { _ = try String.unbox("", decoder: _decoder) }.toNot(throwError())
                             let value = try! String.unbox("", decoder: _decoder)
                             expect(value) == ""
                         }
                     }
-                    //TODO: Tests for (NS)Date. Maybe in own file?
-                    //TODO: Tests For (NS)Data
-                    //TODO: Tests For (NS)URL
-                    //TODO: Test for XMLAttributeProperty
+                    describe("URL") {
+                        let _decoder = mockDecoder(options: mockOptions)
+                        it("Decodes'https://duckduckgo.com'") {
+                            expect { _ = try URL.unbox("https://duckduckgo.com", decoder: _decoder)}.toNot(throwError())
+                            if let value = try? URL.unbox("https://duckduckgo.com", decoder: _decoder) {
+                                expect(value) == URL(string: "https://duckduckgo.com")
+                            }
+                        }
+                        it("FailsDecoding'Oh Hi Mark!'") {
+                            expect { _ = try URL.unbox("Oh Hi Mark!", decoder: _decoder)}.to(throwError())
+                        }
+                    }
+                    describe("NSURL") {
+                        let _decoder = mockDecoder(options: mockOptions)
+                        it("Decodes'https://duckduckgo.com'") {
+                            expect { _ = try NSURL.unbox("https://duckduckgo.com", decoder: _decoder)}.toNot(throwError())
+                            if let value = try? NSURL.unbox("https://duckduckgo.com", decoder: _decoder) {
+                                expect(value) == NSURL(string: "https://duckduckgo.com")
+                            }
+                        }
+                        it("FailsDecoding'Oh Hi Mark!'") {
+                            expect { _ = try NSURL.unbox("Oh Hi Mark!", decoder: _decoder)}.to(throwError())
+                        }
+                    }
+                    describe("XMLAttributedProperty<Int>") {
+                        let _decoder = mockDecoder(options: mockOptions)
+                        it("Decodes'5'") {
+                            expect { _ = try XMLAttributeProperty<Int>.unbox("5", decoder: _decoder)}.toNot(throwError())
+                            if let value = try? XMLAttributeProperty<Int>.unbox("5", decoder: _decoder) {
+                                expect(value.wrappedValue) == 5
+                            }
+                        }
+                        it("FailsDecoding'Oh Hi Mark!'") {
+                            expect { _ = try NSURL.unbox("Oh Hi Mark!", decoder: _decoder)}.to(throwError())
+                        }
+                    }
                 }
             }
         }

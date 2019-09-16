@@ -23,13 +23,21 @@ public func haveEqualLines(to expectedValue: String, trimWhitespace: Bool = true
         let expectedLines = expectedValue.split(separator: "\n")
         let actualLines = actualValue.split(separator: "\n")
         
-        guard expectedLines.count == actualLines.count else {
+        guard actualLines.count >= expectedLines.count  else {
             return PredicateResult(status: .fail,
                                    message: ExpectationMessage
-                                    .expectedCustomValueTo("have \(expectedLines.count) lines", "\(actualLines.count) lines"))
+                                    .expectedCustomValueTo("""
+                                        have \(expectedLines.count) lines
+                                        
+                                        \(expectedValue)
+                                        """, """
+                                        \(actualLines.count) lines
+                                        
+                                        \(actualValue)
+                                        """))
         }
         
-        for i in 0..<expectedLines.count {
+        for i in 0..<actualLines.count {
             let isEqual = !trimWhitespace ? expectedLines[i] == actualLines[i] :
                 (expectedLines[i].trimmingCharacters(in: .whitespacesAndNewlines) ==
                     actualLines[i].trimmingCharacters(in: .whitespacesAndNewlines))
@@ -39,6 +47,7 @@ public func haveEqualLines(to expectedValue: String, trimWhitespace: Bool = true
                                         .expectedCustomValueTo("have line \(i) be \(expectedLines[i]) ", "\(actualLines[i])"))
             }
         }
+        
         return PredicateResult(
             bool: true,
             message: ExpectationMessage.expectedTo("Match XML")

@@ -83,44 +83,42 @@ internal class _XMLElement {
         self.init(key: key, value: nil, attributes: attributes.mapValues({ $0.description }), children: children)
     }
     
-    static func createRootElement(rootKey: String, object: AnyObject) -> _XMLElement? {
+    static func createRootElement(rootKey: String, object: Any) -> _XMLElement? {
         let element = _XMLElement(key: rootKey)
         
-        if let object = object as? NSDictionary {
+        if let object = object as? [String:Any] {
             _XMLElement.modifyElement(element: element, parentElement: nil, key: nil, object: object)
-        } else if let object = object as? NSArray {
+        } else if let object = object as? [Any] {
             _XMLElement.createElement(parentElement: element, key: rootKey, object: object)
         }
         
         return element
     }
     
-    fileprivate static func createElement(parentElement: _XMLElement?, key: String, object: NSDictionary) {
+    fileprivate static func createElement(parentElement: _XMLElement?, key: String, object: [String:Any]) {
         let element = _XMLElement(key: key)
         
         modifyElement(element: element, parentElement: parentElement, key: key, object: object)
     }
     
-    fileprivate static func modifyElement(element: _XMLElement, parentElement: _XMLElement?, key: String?, object: NSDictionary) {
-        element.attributes = (object[_XMLElement.attributesKey] as? [String: Any])?.mapValues({ String(describing: $0) }) ?? [:]
+    fileprivate static func modifyElement(element: _XMLElement, parentElement: _XMLElement?, key: String?, object: [String:Any]) {
+        element.attributes = (object[_XMLElement.attributesKey] as? [String:Any])?.mapValues({ String(describing: $0) }) ?? [:]
         
-        let objects: [(String, AnyObject)] = object.compactMap({
-            guard let key = $0 as? String, key != _XMLElement.attributesKey else { return nil }
+        let objects: [(String, Any)] = object.compactMap({
+            guard $0 != _XMLElement.attributesKey else { return nil }
             
-            return (key, $1 as AnyObject)
+            return ($0, $1 as Any)
         })
         
         for (key, value) in objects {
-            if let dict = value as? NSDictionary {
+            if let dict = value as? [String:Any] {
                 _XMLElement.createElement(parentElement: element, key: key, object: dict)
-            } else if let array = value as? NSArray {
+            } else if let array = value as? [Any] {
                 _XMLElement.createElement(parentElement: element, key: key, object: array)
-            } else if let string = value as? NSString {
+            } else if let string = value as? String {
                 _XMLElement.createElement(parentElement: element, key: key, object: string)
-            } else if let number = value as? NSNumber {
-                _XMLElement.createElement(parentElement: element, key: key, object: number)
             } else {
-                _XMLElement.createElement(parentElement: element, key: key, object: NSNull())
+                _XMLElement.createNullElement(parentElement: element, key: key)
             }
         }
         
@@ -129,34 +127,27 @@ internal class _XMLElement {
         }
     }
     
-    fileprivate static func createElement(parentElement: _XMLElement, key: String, object: NSArray) {
-        let objects = object.compactMap({ $0 as AnyObject })
+    fileprivate static func createElement(parentElement: _XMLElement, key: String, object: [Any]) {
+        let objects = object.compactMap({ $0 as Any })
         objects.forEach({
-            if let dict = $0 as? NSDictionary {
+            if let dict = $0 as? [String:Any] {
                 _XMLElement.createElement(parentElement: parentElement, key: key, object: dict)
-            } else if let array = $0 as? NSArray {
+            } else if let array = $0 as? [Any] {
                 _XMLElement.createElement(parentElement: parentElement, key: key, object: array)
-            } else if let string = $0 as? NSString {
+            } else if let string = $0 as? String {
                 _XMLElement.createElement(parentElement: parentElement, key: key, object: string)
-            } else if let number = $0 as? NSNumber {
-                _XMLElement.createElement(parentElement: parentElement, key: key, object: number)
             } else {
-                _XMLElement.createElement(parentElement: parentElement, key: key, object: NSNull())
+                _XMLElement.createNullElement(parentElement: parentElement, key: key)
             }
         })
     }
     
-    fileprivate static func createElement(parentElement: _XMLElement, key: String, object: NSNumber) {
-        let element = _XMLElement(key: key, value: object.description)
+    fileprivate static func createElement(parentElement: _XMLElement, key: String, object: String) {
+        let element = _XMLElement(key: key, value: object)
         parentElement.children[key] = (parentElement.children[key] ?? []) + [element]
     }
     
-    fileprivate static func createElement(parentElement: _XMLElement, key: String, object: NSString) {
-        let element = _XMLElement(key: key, value: object.description)
-        parentElement.children[key] = (parentElement.children[key] ?? []) + [element]
-    }
-    
-    fileprivate static func createElement(parentElement: _XMLElement, key: String, object: NSNull) {
+    fileprivate static func createNullElement(parentElement: _XMLElement, key: String) {
         let element = _XMLElement(key: key)
         parentElement.children[key] = (parentElement.children[key] ?? []) + [element]
     }

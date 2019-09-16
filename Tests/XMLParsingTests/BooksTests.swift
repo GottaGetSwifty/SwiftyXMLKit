@@ -43,6 +43,7 @@ class BooksTests: QuickSpec {
         expect(left.title) == right.title
         expect(left.genre) == right.genre
         expect(left.price) ≈ right.price
+        expect(left.order) == right.order
         expect(left.publishDate) == right.publishDate
         expect(left.description) == right.description
     }
@@ -66,8 +67,8 @@ class BooksTests: QuickSpec {
     }
 }
 
-private let book101 = Book(id: "bk101", author: "Gambardella, Matthew", title: "XML Developer's Guide", genre: .computer, price: 44.95, publishDate: formatter.date(from: "2000-10-01")!, description: "An in-depth look at creating applications with XML.")
-private let book102 = Book(id: "bk102", author: "Ralls, Kim", title: "Midnight Rain", genre: .fantasy, price: 5.95, publishDate: formatter.date(from: "2000-12-16")!, description: "A former architect battles corporate zombies, an evil sorceress, and her own childhood to become queen of the world.")
+private let book101 = Book(id: "bk101", order: 1, author: "Gambardella, Matthew", title: "XML Developer's Guide", genre: .computer, price: 44.95, publishDate: formatter.date(from: "2000-10-01")!, description: "An in-depth look at creating applications with XML.")
+private let book102 = Book(id: "bk102", order: 2, author: "Ralls, Kim", title: "Midnight Rain", genre: .fantasy, price: 5.95, publishDate: formatter.date(from: "2000-12-16")!, description: "A former architect battles corporate zombies, an evil sorceress, and her own childhood to become queen of the world.")
 
 private let catalogResult = Catalog(books: [book101, book102])
 
@@ -78,6 +79,7 @@ private let booksXML = """
         <author>Gambardella, Matthew</author>
         <description>An in-depth look at creating applications with XML.</description>
         <genre>Computer</genre>
+        <order>1</order>
         <price>44.95</price>
         <publish_date>2000-10-01</publish_date>
         <title>XML Developer&apos;s Guide</title>
@@ -86,6 +88,7 @@ private let booksXML = """
         <author>Ralls, Kim</author>
         <description>A former architect battles corporate zombies, an evil sorceress, and her own childhood to become queen of the world.</description>
         <genre>Fantasy</genre>
+        <order>2</order>
         <price>5.95</price>
         <publish_date>2000-12-16</publish_date>
         <title>Midnight Rain</title>
