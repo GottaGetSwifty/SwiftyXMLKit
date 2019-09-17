@@ -21,7 +21,6 @@ class BookTests: QuickSpec {
     let encoder: XMLEncoder = {
         let encoder = XMLEncoder()
         encoder.dateEncodingStrategy = .formatted(formatter)
-        encoder.stringEncodingStrategy = .deferredToString
         return encoder
     }()
     let decoder: XMLDecoder = {
@@ -51,21 +50,24 @@ class BookTests: QuickSpec {
                 }
                 it("Decodes") {
                     let data = bookXML.data(using: .utf8)!
-                    let book = try! self.decoder.decode(Book.self, from: data)
-                    self.compareBooks(book, bookResult)
-
+                    expect{_ = try self.decoder.decode(Book.self, from: data)}.toNot(throwError())
+                    let book = try? self.decoder.decode(Book.self, from: data)
+                    expect(book).toNot(beNil())
+                    if let realBook = book {
+                        self.compareBooks(realBook, bookResult)
+                    }
                 }
             }
         }
     }
 }
 
-private let bookResult = Book(id: "bk101", order: 1, author: "Gambardella, Matthew", title: "XML Developer's Guide", genre: .computer, price: 44.95, publishDate: formatter.date(from: "2000-10-01")!, description: "An in-depth look at creating applications with XML.")
+private let bookResult = Book(id: "bk101", order: 1, author: "Gambardella, Matthew", title: "XML Developer's Guide", genre: .computer, price: 44.95, publishDate: formatter.date(from: "2000-10-01")!, description: "An in-depth look & analysis of creating applications with XML.")
 private let bookXML = """
 <?xml version="1.0"?>
 <book id="bk101">
     <author>Gambardella, Matthew</author>
-    <description>An in-depth look at creating applications with XML.</description>
+    <description><![CDATA[An in-depth look & analysis of creating applications with XML.]]></description>
     <genre>Computer</genre>
     <order>1</order>
     <price>44.95</price>

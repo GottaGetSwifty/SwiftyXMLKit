@@ -21,7 +21,6 @@ class BooksTests: QuickSpec {
     let encoder: XMLEncoder = {
         let encoder = XMLEncoder()
         encoder.dateEncodingStrategy = .formatted(formatter)
-        encoder.stringEncodingStrategy = .deferredToString
         return encoder
     }()
     let decoder: XMLDecoder = {
@@ -58,16 +57,19 @@ class BooksTests: QuickSpec {
                 }
                 it("Decodes") {
                     let data = booksXML.data(using: .utf8)!
-                    let catalog = try! self.decoder.decode(Catalog.self, from: data)
-                    self.compareCatalog(catalog, catalogResult)
-
+                    expect{_ = try self.decoder.decode(Catalog.self, from: data)}.toNot(throwError())
+                    let catalog = try? self.decoder.decode(Catalog.self, from: data)
+                    expect(catalog).toNot(beNil())
+                    if let realCatalog = catalog {
+                        self.compareCatalog(realCatalog, catalogResult)
+                    }
                 }
             }
         }
     }
 }
 
-private let book101 = Book(id: "bk101", order: 1, author: "Gambardella, Matthew", title: "XML Developer's Guide", genre: .computer, price: 44.95, publishDate: formatter.date(from: "2000-10-01")!, description: "An in-depth look at creating applications with XML.")
+private let book101 = Book(id: "bk101", order: 1, author: "Gambardella, Matthew", title: "XML Developer's Guide", genre: .computer, price: 44.95, publishDate: formatter.date(from: "2000-10-01")!, description: "An in-depth look & analysis of creating applications with XML.")
 private let book102 = Book(id: "bk102", order: 2, author: "Ralls, Kim", title: "Midnight Rain", genre: .fantasy, price: 5.95, publishDate: formatter.date(from: "2000-12-16")!, description: "A former architect battles corporate zombies, an evil sorceress, and her own childhood to become queen of the world.")
 
 private let catalogResult = Catalog(books: [book101, book102])
@@ -77,7 +79,7 @@ private let booksXML = """
 <catalog>
     <book id="bk101">
         <author>Gambardella, Matthew</author>
-        <description>An in-depth look at creating applications with XML.</description>
+        <description><![CDATA[An in-depth look & analysis of creating applications with XML.]]></description>
         <genre>Computer</genre>
         <order>1</order>
         <price>44.95</price>
@@ -86,7 +88,7 @@ private let booksXML = """
     </book>
     <book id="bk102">
         <author>Ralls, Kim</author>
-        <description>A former architect battles corporate zombies, an evil sorceress, and her own childhood to become queen of the world.</description>
+        <description><![CDATA[A former architect battles corporate zombies, an evil sorceress, and her own childhood to become queen of the world.]]></description>
         <genre>Fantasy</genre>
         <order>2</order>
         <price>5.95</price>

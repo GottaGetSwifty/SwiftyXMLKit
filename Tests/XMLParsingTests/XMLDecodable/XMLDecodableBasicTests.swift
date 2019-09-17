@@ -91,6 +91,20 @@ class XMLDecodableBasicTests: QuickSpec {
                             expect(value) == ""
                         }
                     }
+                    describe("CDataString") {
+                        let _decoder = mockDecoder(options: mockOptions)
+                        it("Decodes'hi'") {
+                            // The XML Parser converts CData to a normal String, so we don't need to do anything special
+                            expect { _ = try XMLCDataProperty.unbox("hi", decoder: _decoder) }.toNot(throwError())
+                            let value = try! XMLCDataProperty.unbox("hi", decoder: _decoder)
+                            expect(value.wrappedValue) == "hi"
+                        }
+                        it("Decodes''") {
+                            expect { _ = try XMLCDataProperty.unbox("", decoder: _decoder) }.toNot(throwError())
+                            let value = try! XMLCDataProperty.unbox("", decoder: _decoder)
+                            expect(value.wrappedValue) == ""
+                        }
+                    }
                     describe("URL") {
                         let _decoder = mockDecoder(options: mockOptions)
                         it("Decodes'https://duckduckgo.com'") {

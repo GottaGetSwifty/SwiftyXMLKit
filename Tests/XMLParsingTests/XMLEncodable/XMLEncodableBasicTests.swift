@@ -71,6 +71,25 @@ class XMLEncodableBasicTests: QuickSpec {
                             }
                         }
                     }
+                    describe("CData") {
+                        let _encoder = mockEncoder(options: mockOptions)
+                        it("Encodes'hi'") {
+                            expect { _ = try XMLCDataProperty(wrappedValue: "hi").encodeAsAny(encoder: _encoder) }.toNot(throwError())
+                            let value = try? XMLCDataProperty(wrappedValue: "hi").encodeAsAny(encoder: _encoder)
+                            expect(value).to(beAKindOf(String.self))
+                            if let stringValue = value as? String {
+                                expect(stringValue) == "<![CDATA[hi]]>"
+                            }
+                        }
+                        it("Encodes''") {
+                            expect { _ = try XMLCDataProperty(wrappedValue: "").encodeAsAny(encoder: _encoder) }.toNot(throwError())
+                            let value = try? XMLCDataProperty(wrappedValue: "").encodeAsAny(encoder: _encoder)
+                            expect(value).to(beAKindOf(String.self))
+                            if let stringValue = value as? String {
+                                expect(stringValue) == "<![CDATA[]]>"
+                            }
+                        }
+                    }
                     describe("URL") {
                         let _encoder = mockEncoder(options: mockOptions)
                         it("Encodes'https://duckduckgo.com'") {

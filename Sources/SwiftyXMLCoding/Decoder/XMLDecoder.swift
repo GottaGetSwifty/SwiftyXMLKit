@@ -20,12 +20,6 @@ open class XMLDecoder {
         /// Defer to `Date` for decoding. This is the default strategy.
         case deferredToDate
         
-        /// Decode the `Date` as a UNIX timestamp from a XML number. This is the default strategy.
-        case secondsSince1970
-        
-        /// Decode the `Date` as UNIX millisecond timestamp from a XML number.
-        case millisecondsSince1970
-        
         /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
         @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
         case iso8601
@@ -35,6 +29,12 @@ open class XMLDecoder {
         
         /// Decode the `Date` as a custom value decoded by the given closure.
         case custom((_ decoder: Decoder) throws -> Date)
+        
+        /// Decode the `Date` as UNIX millisecond timestamp from a XML number.
+        case millisecondsSince1970
+        
+        /// Decode the `Date` as a UNIX timestamp from a XML number. This is the default strategy.
+        case secondsSince1970
         
         /// Decode the `Date` as a string parsed by the given formatter for the give key.
         static func keyFormatted(_ formatterForKey: @escaping (CodingKey) throws -> DateFormatter?) -> XMLDecoder.DateDecodingStrategy {
@@ -63,14 +63,15 @@ open class XMLDecoder {
     
     /// The strategy to use for decoding `Data` values.
     public enum DataDecodingStrategy {
-        /// Defer to `Data` for decoding.
-        case deferredToData
         
         /// Decode the `Data` from a Base64-encoded string. This is the default strategy.
         case base64
         
         /// Decode the `Data` as a custom value decoded by the given closure.
         case custom((_ decoder: Decoder) throws -> Data)
+        
+        /// Defer to `Data` for decoding.
+        case deferredToData
         
         /// Decode the `Data` as a custom value by the given closure for the give key.
         static func keyFormatted(_ formatterForKey: @escaping (CodingKey) throws -> Data?) -> XMLDecoder.DataDecodingStrategy {
@@ -725,5 +726,12 @@ extension NSURL: XMLDecodable {
 extension XMLAttributeProperty: XMLDecodable where T: XMLDecodable {
     static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> XMLAttributeProperty<T> {
         return XMLAttributeProperty<T>(wrappedValue: try T.unbox(value, decoder: decoder))
+    }
+}
+
+extension XMLCDataProperty: XMLDecodable {
+    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> XMLCDataProperty {
+        // The XML Parser converts CData to a normal String, so we don't need to do anything special
+        return XMLCDataProperty(wrappedValue: try String.unbox(value, decoder: decoder))
     }
 }

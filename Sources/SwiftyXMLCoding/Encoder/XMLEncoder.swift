@@ -15,7 +15,9 @@ import Foundation
 
 /// `XMLEncoder` facilitates the encoding of `Encodable` values into XML.
 open class XMLEncoder {
+    
     // MARK: Options
+    
     /// The formatting of the output XML data.
     public struct OutputFormatting : OptionSet {
         /// The format's default value.
@@ -39,12 +41,6 @@ open class XMLEncoder {
         /// Defer to `Date` for choosing an encoding. This is the default strategy.
         case deferredToDate
         
-        /// Encode the `Date` as a UNIX timestamp (as a XML number).
-        case secondsSince1970
-        
-        /// Encode the `Date` as UNIX millisecond timestamp (as a XML number).
-        case millisecondsSince1970
-        
         /// Encode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
         @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
         case iso8601
@@ -56,21 +52,16 @@ open class XMLEncoder {
         ///
         /// If the closure fails to encode a value into the given encoder, the encoder will encode an empty automatic container in its place.
         case custom((Date, Encoder) throws -> Void)
-    }
-    
-    /// The strategy to use for encoding `String` values.
-    public enum StringEncodingStrategy {
-        /// Defer to `String` for choosing an encoding. This is the default strategy.
-        case deferredToString
         
-        /// Encoded the `String` as a CData-encoded string.
-        case cdata
+        /// Encode the `Date` as UNIX millisecond timestamp (as a XML number).
+        case millisecondsSince1970
+        
+        /// Encode the `Date` as a UNIX timestamp (as a XML number).
+        case secondsSince1970
     }
     
     /// The strategy to use for encoding `Data` values.
     public enum DataEncodingStrategy {
-        /// Defer to `Data` for choosing an encoding.
-        case deferredToData
         
         /// Encoded the `Data` as a Base64-encoded string. This is the default strategy.
         case base64
@@ -79,6 +70,9 @@ open class XMLEncoder {
         ///
         /// If the closure fails to encode a value into the given encoder, the encoder will encode an empty automatic container in its place.
         case custom((Data, Encoder) throws -> Void)
+        
+        /// Defer to `Data` for choosing an encoding.
+        case deferredToData
     }
     
     /// The strategy to use for non-XML-conforming floating-point values (IEEE 754 infinity and NaN).
@@ -181,9 +175,6 @@ open class XMLEncoder {
     /// The strategy to use for encoding keys. Defaults to `.useDefaultKeys`.
     open var keyEncodingStrategy: KeyEncodingStrategy = .useDefaultKeys
     
-    /// The strategy to use in encoding strings. Defaults to `.deferredToString`.
-    open var stringEncodingStrategy: StringEncodingStrategy = .deferredToString
-    
     /// Contextual user-provided information for use during encoding.
     open var userInfo: [CodingUserInfoKey : Any] = [:]
     
@@ -193,7 +184,6 @@ open class XMLEncoder {
         let dataEncodingStrategy: DataEncodingStrategy
         let nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy
         let keyEncodingStrategy: KeyEncodingStrategy
-        let stringEncodingStrategy: StringEncodingStrategy
         let userInfo: [CodingUserInfoKey : Any]
     }
     
@@ -203,7 +193,6 @@ open class XMLEncoder {
                         dataEncodingStrategy: dataEncodingStrategy,
                         nonConformingFloatEncodingStrategy: nonConformingFloatEncodingStrategy,
                         keyEncodingStrategy: keyEncodingStrategy,
-                        stringEncodingStrategy: stringEncodingStrategy,
                         userInfo: userInfo)
     }
     
@@ -237,7 +226,7 @@ open class XMLEncoder {
             throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: [], debugDescription: "Unable to encode the given top-level value to XML."))
         }
         
-        return element.toXMLString(with: header, withCDATA: stringEncodingStrategy != .deferredToString).data(using: .utf8, allowLossyConversion: true)!
+        return element.toXMLString(with: header).data(using: .utf8, allowLossyConversion: true)!
     }
 }
 
@@ -591,6 +580,13 @@ extension XMLAttributeProperty: XMLEncodable where T: XMLEncodable {
     func encodeAsAny(encoder: _XMLEncoder) throws -> Any { try wrappedValue.encodeAsAny(encoder: encoder) }
 }
 
+extension XMLCDataProperty: XMLEncodable  {
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "<![CDATA[\(wrappedValue)]]>" }
+}
+extension String: XMLEncodable {
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self.escape(_XMLElement.escapedCharacterSet))" }
+}
+
 extension Bool: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
 extension Int: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
 extension Int8: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
@@ -602,7 +598,7 @@ extension UInt8: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws ->
 extension UInt16: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
 extension UInt32: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
 extension UInt64: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
-extension String: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { self } }
+
 extension NSDecimalNumber: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { self } }
 
 extension Decimal: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { self as NSDecimalNumber } }
@@ -650,7 +646,9 @@ extension Date: XMLEncodable {
         }
     }
 }
-extension NSDate: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { return try (self as Date).encodeAsAny(encoder: encoder) } }
+extension NSDate: XMLEncodable {
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { return try (self as Date).encodeAsAny(encoder: encoder) }
+}
 
 extension Data: XMLEncodable {
     func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
@@ -670,4 +668,7 @@ extension Data: XMLEncodable {
         }
     }
 }
-extension NSData: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { try (self as Data).encodeAsAny(encoder: encoder) } }
+extension NSData: XMLEncodable {
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { try (self as Data).encodeAsAny(encoder: encoder) }
+}
+

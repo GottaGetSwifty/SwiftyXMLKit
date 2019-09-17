@@ -18,14 +18,17 @@ struct Catalog: Codable {
 }
 
 struct Book: Codable, Equatable {
-    @XMLAttributeProperty var id: String
+    @XMLAttributeProperty
+    var id: String
     let order: Int
     let author: String
     let title: String
     let genre: Genre
     let price: Double
     let publishDate: Date
-    let description: String
+    
+    @XMLCDataProperty
+    var description: String
     
     enum CodingKeys: String, CodingKey {
         case id, order, author, title, genre, price, description

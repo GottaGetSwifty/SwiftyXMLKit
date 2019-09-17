@@ -187,15 +187,15 @@ internal class _XMLElement {
         return node
     }
     
-    func toXMLString(with header: XMLHeader? = nil, withCDATA cdata: Bool, ignoreEscaping: Bool = false) -> String {
+    func toXMLString(with header: XMLHeader? = nil, ignoreEscaping: Bool = false) -> String {
         if let header = header, let headerXML = header.toXML() {
-            return headerXML + _toXMLString(withCDATA: cdata)
+            return headerXML + _toXMLString()
         } else {
-            return _toXMLString(withCDATA: cdata)
+            return _toXMLString()
         }
     }
     
-    fileprivate func _toXMLString(indented level: Int = 0, withCDATA cdata: Bool, ignoreEscaping: Bool = false) -> String {
+    fileprivate func _toXMLString(indented level: Int = 0, ignoreEscaping: Bool = false) -> String {
         var string = String(repeating: " ", count: level * 4)
         string += "<\(key)"
         
@@ -205,18 +205,14 @@ internal class _XMLElement {
         
         if let value = value {
             string += ">"
-            if !ignoreEscaping {
-                string += (cdata == true ? "<![CDATA[\(value)]]>" : "\(value.escape(_XMLElement.escapedCharacterSet))" )
-            } else {
-                string += "\(value)"
-            }
+            string += "\(value)"
             string += "</\(key)>"
         } else if !children.isEmpty {
             string += ">\n"
             
             for childElement in sortedChildren {
                 for child in childElement.1 {
-                    string += child._toXMLString(indented: level + 1, withCDATA: cdata)
+                    string += child._toXMLString(indented: level + 1)
                     string += "\n"
                 }
             }
