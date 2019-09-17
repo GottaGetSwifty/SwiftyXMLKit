@@ -209,6 +209,17 @@ open class XMLEncoder {
     /// - throws: `EncodingError.invalidValue` if a non-conforming floating-point value is encountered during encoding, and the encoding strategy is `.throw`.
     /// - throws: An error if any value throws an error during encoding.
     open func encode<T : Encodable>(_ value: T, withRootKey rootKey: String, header: XMLHeader? = nil) throws -> Data {
+        try encodeToString(value, withRootKey: rootKey, header: header).data(using: .utf8, allowLossyConversion: true)!
+    }
+    // MARK: - Encoding Values
+    /// Encodes the given top-level value and returns its XML representation.
+    ///
+    /// - parameter value: The value to encode.
+    /// - parameter withRootKey: the key used to wrap the encoded values.
+    /// - returns: A new `Data` value containing the encoded XML data.
+    /// - throws: `EncodingError.invalidValue` if a non-conforming floating-point value is encountered during encoding, and the encoding strategy is `.throw`.
+    /// - throws: An error if any value throws an error during encoding.
+    open func encodeToString<T : Encodable>(_ value: T, withRootKey rootKey: String, header: XMLHeader? = nil) throws -> String {
         let encoder = _XMLEncoder(options: self.options)
         let topLevel = try encoder.box(value)
         
@@ -226,7 +237,7 @@ open class XMLEncoder {
             throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: [], debugDescription: "Unable to encode the given top-level value to XML."))
         }
         
-        return element.toXMLString(with: header).data(using: .utf8, allowLossyConversion: true)!
+        return element.toXMLString(with: header)
     }
 }
 

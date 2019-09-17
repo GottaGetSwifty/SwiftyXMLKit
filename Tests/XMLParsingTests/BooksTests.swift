@@ -58,7 +58,7 @@ class BooksTests: QuickSpec {
                 it("Decodes") {
                     let data = booksXML.data(using: .utf8)!
                     expect{_ = try self.decoder.decode(Catalog.self, from: data)}.toNot(throwError())
-                    let catalog = try? self.decoder.decode(Catalog.self, from: data)
+                    let catalog: Catalog? = try? self.decoder.decode(from: data)
                     expect(catalog).toNot(beNil())
                     if let realCatalog = catalog {
                         self.compareCatalog(realCatalog, catalogResult)

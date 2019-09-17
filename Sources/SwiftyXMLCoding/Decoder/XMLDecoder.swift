@@ -208,7 +208,7 @@ open class XMLDecoder {
     // MARK: - Constructing a XML Decoder
     /// Initializes `self` with default strategies.
     public init() {}
-    
+
     // MARK: - Decoding Values
     /// Decodes a top-level value of the given type from the given XML representation.
     ///
@@ -217,18 +217,7 @@ open class XMLDecoder {
     /// - returns: A value of the requested type.
     /// - throws: `DecodingError.dataCorrupted` if values requested from the payload are corrupted, or if the given data is not valid XML.
     /// - throws: An error if any value throws an error during decoding.
-    open func decode<T : Decodable>(from data: Data) throws -> T {
-        try decode(T.self, from: data)
-    }
-    // MARK: - Decoding Values
-    /// Decodes a top-level value of the given type from the given XML representation.
-    ///
-    /// - parameter type: The type of the value to decode.
-    /// - parameter data: The data to decode from.
-    /// - returns: A value of the requested type.
-    /// - throws: `DecodingError.dataCorrupted` if values requested from the payload are corrupted, or if the given data is not valid XML.
-    /// - throws: An error if any value throws an error during decoding.
-    open func decode<T : Decodable>(_ type: T.Type, from data: Data) throws -> T {
+    open func decode<T : Decodable>(_ type: T.Type = T.self, from data: Data) throws -> T {
         let topLevel: [String: Any]
         do {
             topLevel = try _XMLStackParser.parse(with: data)
