@@ -1,26 +1,26 @@
 # SwiftyXMLKit
 
-## Included Libraries
+## Availible Libraries
 
-## [SwiftyXMLCoding](#SwiftyXMLCoding): **V0.5(Beta )**
+## [SwiftyXMLCoding](#SwiftyXMLCoding): **V0.6.0(Beta )**
 
-### An XMLEncoder and XMLDecoder that parse Swift's `[Encodable](https://developer.apple.com/documentation/swift/encodable)` and `[Decodable](https://developer.apple.com/documentation/swift/decodable)` protocols and use `PropertyWrapper`s to handle XML Attributes and CData Strings
+ An XMLEncoder and XMLDecoder that serializes Swift's `[Encodable](https://developer.apple.com/documentation/swift/encodable)` and `[Decodable](https://developer.apple.com/documentation/swift/decodable)` protocols to XML using `PropertyWrapper`s to indicate XML Attributes and CData Strings
 
 ## Installation
 
 ### Swift Package Manager
 
-Since SPM now has integrated support everywhere Swift is used and modern Swift is required anyway, there are currently no plans to support any other dependency management tool. More info can be found [SPM Website](https://swift.org/package-manager/)
+Since SPM now has integrated support everywhere Swift is used and modern Swift is required anyway, there are currently no plans to support any other dependency management tool. More info can be found at the [SPM Website](https://swift.org/package-manager/)
 
 If you're working directly in a Package, add SwiftyXMLKit to your Package.swift file
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/PeeJWeeJ/SwiftyXMLKit.git", .upToNextMajor(from: "0.0.0" )),
+    .package(url: "https://github.com/PeeJWeeJ/SwiftyXMLKit.git", .upToNextMajor(from: "0.6.0-beta" )),
 ]
 ```
 
-Otherwise In your Xcode project go to `File->Swift Packages->Add Package Dependency...`, and search for the git url:
+Otherwise In your Xcode project select `File->Swift Packages->Add Package Dependency...` and search for the package name: `SwiftyXMLKit` or git url:
 
 `https://github.com/PeeJWeeJ/SwiftyXMLKit.git`
 
@@ -43,7 +43,7 @@ let xmlStr = """
 </book>
 """
 
-struct Book: Codable, Equatable {
+struct Book: Codable {
 
     @XMLAttributeProperty
     var id: String
@@ -57,15 +57,36 @@ struct Book: Codable, Equatable {
     var description: String
 }
 
-if let xmlData = xmlStr.data(using: .utf8) {
+func decodeBookXML(from data: Data) -> Book? {
     do {
-        let book: Book = try XMLDecoder().decode(from: xmlData)
-        //or
+        // Decode the data
+        /*
+        Verbose version:
         let book = try XMLDecoder().decode(Book.self, from: xmlData)
-        // Use your decoded Book
+        return book
+        */
+        // Concise Version:
+        return try XMLDecoder().decode(from: xmlData)
     }
     catch  {
         print(error.localizedDescription)
+        return nil
+    }
+}
+
+
+func encodeBookAsXML(_ book: Book) -> String? {}
+    do {
+         /* encode as utf8 Data
+        let bookXMLData: Data = try XMLEncoder().encode(book, withRootKey: "book", header: XMLHeader(version: 1.0)
+        */
+        // encode as a String:
+        return try XMLEncoder().encodeAsString(book, withRootKey: "book", header: XMLHeader(version: 1.0)
+       
+    }
+    catch  {
+        print(error.localizedDescription)
+        return nil
     }
 }
 ```
