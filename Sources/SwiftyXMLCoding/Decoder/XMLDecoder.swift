@@ -62,46 +62,46 @@ open class XMLDecoder {
 //    }
     
     /// The strategy to use for decoding `Data` values.
-    public enum DataDecodingStrategy {
-        
-        /// Decode the `Data` from a Base64-encoded string. This is the default strategy.
-        case base64
-        
-        /// Decode the `Data` as a custom value decoded by the given closure.
-        case custom((_ decoder: Decoder) throws -> Data)
-        
-        /// Defer to `Data` for decoding.
-        case deferredToData
-        
-        /// Decode the `Data` as a custom value by the given closure for the give key.
-        static func keyFormatted(_ formatterForKey: @escaping (CodingKey) throws -> Data?) -> XMLDecoder.DataDecodingStrategy {
-            return .custom({ (decoder) -> Data in
-                guard let codingKey = decoder.codingPath.last else {
-                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "No Coding Path Found"))
-                }
-                
-                guard let container = try? decoder.singleValueContainer(),
-                    let text = try? container.decode(String.self) else {
-                        throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Could not decode date text"))
-                }
-                
-                guard let data = try formatterForKey(codingKey) else {
-                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode data string \(text)")
-                }
-                
-                return data
-            })
-        }
-    }
+//    public enum DataDecodingStrategy {
+//
+//        /// Decode the `Data` from a Base64-encoded string. This is the default strategy.
+//        case base64
+//
+//        /// Decode the `Data` as a custom value decoded by the given closure.
+//        case custom((_ decoder: Decoder) throws -> Data)
+//
+//        /// Defer to `Data` for decoding.
+//        case deferredToData
+//
+//        /// Decode the `Data` as a custom value by the given closure for the give key.
+//        static func keyFormatted(_ formatterForKey: @escaping (CodingKey) throws -> Data?) -> XMLDecoder.DataDecodingStrategy {
+//            return .custom({ (decoder) -> Data in
+//                guard let codingKey = decoder.codingPath.last else {
+//                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "No Coding Path Found"))
+//                }
+//
+//                guard let container = try? decoder.singleValueContainer(),
+//                    let text = try? container.decode(String.self) else {
+//                        throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Could not decode date text"))
+//                }
+//
+//                guard let data = try formatterForKey(codingKey) else {
+//                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode data string \(text)")
+//                }
+//
+//                return data
+//            })
+//        }
+//    }
     
     /// The strategy to use for non-XML-conforming floating-point values (IEEE 754 infinity and NaN).
-    public enum NonConformingFloatDecodingStrategy {
-        /// Throw upon encountering non-conforming values. This is the default strategy.
-        case `throw`
-        
-        /// Decode the values from the given representation strings.
-        case convertFromString(positiveInfinity: String, negativeInfinity: String, nan: String)
-    }
+//    public enum NonConformingFloatDecodingStrategy {
+//        /// Throw upon encountering non-conforming values. This is the default strategy.
+//        case `throw`
+//
+//        /// Decode the values from the given representation strings.
+//        case convertFromString(positiveInfinity: String, negativeInfinity: String, nan: String)
+//    }
     
     /// The strategy to use for automatically changing the value of keys before decoding.
     public enum KeyDecodingStrategy {
@@ -176,10 +176,10 @@ open class XMLDecoder {
 //    open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
     
     /// The strategy to use in decoding binary data. Defaults to `.base64`.
-    open var dataDecodingStrategy: DataDecodingStrategy = .base64
+//    open var dataDecodingStrategy: DataDecodingStrategy = .base64
     
     /// The strategy to use in decoding non-conforming numbers. Defaults to `.throw`.
-    open var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw
+//    open var nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy = .throw
     
     /// The strategy to use for decoding keys. Defaults to `.useDefaultKeys`.
     open var keyDecodingStrategy: KeyDecodingStrategy = .useDefaultKeys
@@ -190,8 +190,8 @@ open class XMLDecoder {
     /// Options set on the top-level encoder to pass down the decoding hierarchy.
     internal struct _Options {
 //        let dateDecodingStrategy: DateDecodingStrategy
-        let dataDecodingStrategy: DataDecodingStrategy
-        let nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy
+//        let dataDecodingStrategy: DataDecodingStrategy
+//        let nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy
         let keyDecodingStrategy: KeyDecodingStrategy
         let userInfo: [CodingUserInfoKey : Any]
     }
@@ -200,8 +200,8 @@ open class XMLDecoder {
     internal var options: _Options {
         return _Options(
 //            dateDecodingStrategy: dateDecodingStrategy,
-                        dataDecodingStrategy: dataDecodingStrategy,
-                        nonConformingFloatDecodingStrategy: nonConformingFloatDecodingStrategy,
+//                        dataDecodingStrategy: dataDecodingStrategy,
+//                        nonConformingFloatDecodingStrategy: nonConformingFloatDecodingStrategy,
                         keyDecodingStrategy: keyDecodingStrategy,
                         userInfo: userInfo)
     }
@@ -548,24 +548,13 @@ extension Float: XMLDecodable {
     static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Float {
         let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Float.self)
         
-        switch decoder.options.nonConformingFloatDecodingStrategy {
-        case .convertFromString(let posInfString, let negInfString, let nanString):
-            switch string {
-            case posInfString: return Float.infinity
-            case negInfString: return -Float.infinity
-            case nanString: return Float.nan
-            default: break
-            }
-            fallthrough
-        default:
-            let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: Int.self)
-            let double = number.doubleValue
-            guard abs(double) <= Double(Float.greatestFiniteMagnitude) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number \(number) does not fit in \(Float.self)."))
-            }
-            
-            return Float(double)
+        let number = try doNumberSetup(string, codingPath: decoder.codingPath, type: Int.self)
+        let double = number.doubleValue
+        guard abs(double) <= Double(Float.greatestFiniteMagnitude) else {
+            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Parsed XML number \(number) does not fit in \(Float.self)."))
         }
+        
+        return Float(double)
     }
 }
 
@@ -573,23 +562,12 @@ extension Double: XMLDecodable {
     static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Double {
         let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Double.self)
         
-        switch decoder.options.nonConformingFloatDecodingStrategy {
-        case .convertFromString(let posInfString, let negInfString, let nanString):
-            switch string {
-            case posInfString: return Double.infinity
-            case negInfString: return -Double.infinity
-            case nanString: return Double.nan
-            default: break
-            }
-            fallthrough
-        default:
-            guard let number = Decimal(string: string) as NSDecimalNumber?,
-                number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
-                    throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Double.self, reality: value)
-            }
-            
-            return number.doubleValue
+        guard let number = Decimal(string: string) as NSDecimalNumber?,
+            number !== kCFBooleanTrue, number !== kCFBooleanFalse else {
+                throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Double.self, reality: value)
         }
+        
+        return number.doubleValue
     }
 }
 
@@ -605,7 +583,6 @@ extension Decimal: XMLDecodable {
 extension String: XMLDecodable {
     static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> String {
         let string = try unwrapToString(value, codingPath: decoder.codingPath, type: Double.self)
-        
         return string
     }
 }
@@ -659,36 +636,36 @@ extension String: XMLDecodable {
 //    }
 //}
 //
-extension Data: XMLDecodable {
-    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Data {
-
-        switch decoder.options.dataDecodingStrategy {
-        case .deferredToData:
-            decoder.storage.push(container: value)
-            defer { decoder.storage.popContainer() }
-            return try Data(from: decoder)
-
-        case .base64:
-            guard let string = value as? String else {
-                throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Data.self, reality: value)
-            }
-
-            guard let data = Data(base64Encoded: string) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Encountered Data is not valid Base64."))
-            }
-
-            return data
-
-        case .custom(let closure):
-            decoder.storage.push(container: value)
-            defer { decoder.storage.popContainer() }
-            return try closure(decoder)
-        }
-    }
-}
-extension NSData: XMLDecodable {
-    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Self { try Self(data: Data.unbox(value, decoder: decoder)) }
-}
+//extension Data: XMLDecodable {
+//    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Data {
+//
+//        switch decoder.options.dataDecodingStrategy {
+//        case .deferredToData:
+//            decoder.storage.push(container: value)
+//            defer { decoder.storage.popContainer() }
+//            return try Data(from: decoder)
+//
+//        case .base64:-=
+//            guard let string = value as? String else {
+//                throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Data.self, reality: value)
+//            }
+//
+//            guard let data = Data(base64Encoded: string) else {
+//                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Encountered Data is not valid Base64."))
+//            }
+//
+//            return data
+//
+//        case .custom(let closure):
+//            decoder.storage.push(container: value)
+//            defer { decoder.storage.popContainer() }
+//            return try closure(decoder)
+//        }
+//    }
+//}
+//extension NSData: XMLDecodable {
+//    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Self { try Self(data: Data.unbox(value, decoder: decoder)) }
+//}
 
 extension URL: XMLDecodable {
     static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> URL {

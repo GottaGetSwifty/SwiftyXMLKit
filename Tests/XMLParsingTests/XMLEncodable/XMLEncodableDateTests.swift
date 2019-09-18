@@ -23,7 +23,7 @@ private struct SingleValue<T: Decodable>: Decodable {
 private func mockEncoder() -> _XMLEncoder {
     let localEncoder = encoder
 //    localEncoder.dateEncodingStrategy = dateStrategy
-    return mockEncoder(options: encoder.options)
+    return mockEncoder(options: localEncoder.options)
 }
 
 private func mockEncoder(options: XMLEncoder._Options) -> _XMLEncoder {

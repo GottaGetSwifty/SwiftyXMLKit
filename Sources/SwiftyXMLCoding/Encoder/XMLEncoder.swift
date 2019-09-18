@@ -61,28 +61,28 @@ open class XMLEncoder {
 //    }
     
     /// The strategy to use for encoding `Data` values.
-    public enum DataEncodingStrategy {
-        
-        /// Encoded the `Data` as a Base64-encoded string. This is the default strategy.
-        case base64
-        
-        /// Encode the `Data` as a custom value encoded by the given closure.
-        ///
-        /// If the closure fails to encode a value into the given encoder, the encoder will encode an empty automatic container in its place.
-        case custom((Data, Encoder) throws -> Void)
-        
-        /// Defer to `Data` for choosing an encoding.
-        case deferredToData
-    }
+//    public enum DataEncodingStrategy {
+//
+//        /// Encoded the `Data` as a Base64-encoded string. This is the default strategy.
+//        case base64
+//
+//        /// Encode the `Data` as a custom value encoded by the given closure.
+//        ///
+//        /// If the closure fails to encode a value into the given encoder, the encoder will encode an empty automatic container in its place.
+//        case custom((Data, Encoder) throws -> Void)
+//
+//        /// Defer to `Data` for choosing an encoding.
+//        case deferredToData
+//    }
     
     /// The strategy to use for non-XML-conforming floating-point values (IEEE 754 infinity and NaN).
-    public enum NonConformingFloatEncodingStrategy {
-        /// Throw upon encountering non-conforming values. This is the default strategy.
-        case `throw`
-        
-        /// Encode the values using the given representation strings.
-        case convertToString(positiveInfinity: String, negativeInfinity: String, nan: String)
-    }
+//    public enum NonConformingFloatEncodingStrategy {
+//        /// Throw upon encountering non-conforming values. This is the default strategy.
+//        case `throw`
+//
+//        /// Encode the values using the given representation strings.
+//        case convertToString(positiveInfinity: String, negativeInfinity: String, nan: String)
+//    }
     
     /// The strategy to use for automatically changing the value of keys before encoding.
     public enum KeyEncodingStrategy {
@@ -167,10 +167,10 @@ open class XMLEncoder {
 //    open var dateEncodingStrategy: DateEncodingStrategy = .deferredToDate
     
     /// The strategy to use in encoding binary data. Defaults to `.base64`.
-    open var dataEncodingStrategy: DataEncodingStrategy = .base64
+//    open var dataEncodingStrategy: DataEncodingStrategy = .base64
     
     /// The strategy to use in encoding non-conforming numbers. Defaults to `.throw`.
-    open var nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy = .throw
+//    open var nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy = .throw
     
     /// The strategy to use for encoding keys. Defaults to `.useDefaultKeys`.
     open var keyEncodingStrategy: KeyEncodingStrategy = .useDefaultKeys
@@ -181,8 +181,8 @@ open class XMLEncoder {
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     internal struct _Options {
 //        let dateEncodingStrategy: DateEncodingStrategy
-        let dataEncodingStrategy: DataEncodingStrategy
-        let nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy
+//        let dataEncodingStrategy: DataEncodingStrategy
+//        let nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy
         let keyEncodingStrategy: KeyEncodingStrategy
         let userInfo: [CodingUserInfoKey : Any]
     }
@@ -191,8 +191,8 @@ open class XMLEncoder {
     internal var options: _Options {
         return _Options(
 //            dateEncodingStrategy: dateEncodingStrategy,
-                        dataEncodingStrategy: dataEncodingStrategy,
-                        nonConformingFloatEncodingStrategy: nonConformingFloatEncodingStrategy,
+//                        dataEncodingStrategy: dataEncodingStrategy,
+//                        nonConformingFloatEncodingStrategy: nonConformingFloatEncodingStrategy,
                         keyEncodingStrategy: keyEncodingStrategy,
                         userInfo: userInfo)
     }
@@ -549,8 +549,6 @@ extension _XMLEncoder: SingleValueEncodingContainer {
 }
 
 extension _XMLEncoder {
-    
-    // This method is called "box_" instead of "box" to disambiguate it from the overloads. Because the return type here is different from all of the "box" overloads (and is more general), any "box" calls in here would call back into "box" recursively instead of calling the appropriate overload, which is not what we want.
     fileprivate func box<T : Encodable>(_ value: T) throws -> Any {
         
         if let valueAsXMLEncodable = value as? XMLEncodable {
@@ -573,27 +571,13 @@ internal protocol XMLEncodable {
     func encodeAsAny(encoder: _XMLEncoder) throws -> Any
 }
 
-extension XMLEncodable where Self: BinaryFloatingPoint {
-    func asAnyObject(infinity: Self, encoder: _XMLEncoder) throws -> Any {
-        
-        switch encoder.options.nonConformingFloatEncodingStrategy {
-        case .convertToString(let posInfString, let negInfString, let nanString) where isInfinite || isNaN:
-            switch self {
-            case infinity: return posInfString as Any
-            case -infinity:return negInfString as Any
-            default: return nanString as Any
-            }
-        default: return "\(self)"
-        }
-    }
-}
-
 extension XMLAttributeProperty: XMLEncodable where T: XMLEncodable {
     func encodeAsAny(encoder: _XMLEncoder) throws -> Any { try wrappedValue.encodeAsAny(encoder: encoder) }
 }
 
 extension String: XMLEncodable {
     func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
+        // If it's in CData the characters don't need to be escaped
         guard !starts(with: "<![CDATA[") else {
             return self
         }
@@ -612,6 +596,8 @@ extension UInt8: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws ->
 extension UInt16: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
 extension UInt32: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
 extension UInt64: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension Float: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
+extension Double: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
 
 extension NSDecimalNumber: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { self } }
 
@@ -620,17 +606,7 @@ extension Decimal: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws 
 extension URL: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { return try  absoluteString.encodeAsAny(encoder: encoder)  } }
 extension NSURL: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { return try (self as URL).encodeAsAny(encoder: encoder) } }
 
-extension Float: XMLEncodable {
-    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
-        try asAnyObject(infinity: Float.infinity, encoder: encoder)
-    }
-}
 
-extension Double: XMLEncodable {
-    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
-        try asAnyObject(infinity: Double.infinity, encoder: encoder)
-    }
-}
 
 //extension Date: XMLEncodable {
 //    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
@@ -665,25 +641,25 @@ extension Double: XMLEncodable {
 //    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { return try (self as Date).encodeAsAny(encoder: encoder) }
 //}
 
-extension Data: XMLEncodable {
-    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
-        switch encoder.options.dataEncodingStrategy {
-        case .deferredToData:
-            try self.encode(to: encoder)
-            return encoder.storage.popContainer()
-        case .base64:
-            return self.base64EncodedString() as AnyObject
-        case .custom(let closure):
-            let depth = encoder.storage.count
-            try closure(self, encoder)
-
-            guard encoder.storage.count > depth else { return [String:Any]() }
-
-            return encoder.storage.popContainer() as AnyObject
-        }
-    }
-}
-extension NSData: XMLEncodable {
-    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { try (self as Data).encodeAsAny(encoder: encoder) }
-}
-
+//extension Data: XMLEncodable {
+//    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
+//        switch encoder.options.dataEncodingStrategy {
+//        case .deferredToData:
+//            try self.encode(to: encoder)
+//            return encoder.storage.popContainer()
+//        case .base64:
+//            return self.base64EncodedString() as AnyObject
+//        case .custom(let closure):
+//            let depth = encoder.storage.count
+//            try closure(self, encoder)
+//
+//            guard encoder.storage.count > depth else { return [String:Any]() }
+//
+//            return encoder.storage.popContainer() as AnyObject
+//        }
+//    }
+//}
+//extension NSData: XMLEncodable {
+//    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { try (self as Data).encodeAsAny(encoder: encoder) }
+//}
+//

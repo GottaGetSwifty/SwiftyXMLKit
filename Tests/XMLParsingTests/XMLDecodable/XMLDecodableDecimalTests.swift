@@ -50,42 +50,42 @@ class XMLDecodableDecimalTests: QuickSpec {
                                 expect { _ = try Float.unbox("-1\(Float.greatestFiniteMagnitude)", decoder: _decoder) }.to(throwError())
                             }
                         }
-                        context("ConvertFromStringStrategy") {
-                            let decoder = XMLDecoder()
-                            decoder.nonConformingFloatDecodingStrategy = .convertFromString(positiveInfinity: "10", negativeInfinity: "-10", nan: "-1")
-                            let _decoder = mockDecoder(options: decoder.options)
-                            it("Decodes'24.24'") {
-                                expect { _ = try Float.unbox("24.24", decoder: _decoder) }.toNot(throwError())
-                                let value = try! Float.unbox("24.24", decoder: _decoder)
-                                expect(value) ≈ 24.24
-                            }
-                            it("Decodes'-24.24'") {
-                                expect { _ = try Float.unbox("-24.24", decoder: _decoder) }.toNot(throwError())
-                                let value = try! Float.unbox("-24.24", decoder: _decoder)
-                                expect(value) ≈ -24.24
-                            }
-                            it("Decodes'infinity'") {
-                                expect { _ = try Float.unbox("10", decoder: _decoder) }.toNot(throwError())
-                                let value = try! Float.unbox("10", decoder: _decoder)
-                                expect(value) == Float.infinity
-                            }
-                            it("Decodes'-infinity'") {
-                                expect { _ = try Float.unbox("-10", decoder: _decoder) }.toNot(throwError())
-                                let value = try! Float.unbox("-10", decoder: _decoder)
-                                expect(value) == -Float.infinity
-                            }
-                            it("Decodes'nan'") {
-                                expect { _ = try Float.unbox("-1", decoder: _decoder) }.toNot(throwError())
-                                let value = try! Float.unbox("-1", decoder: _decoder)
-                                expect(value).to(be(Float.nan))
-                            }
-                            it("FailsDecodingGreaterThanMax") {
-                                expect { _ = try Float.unbox("1\(Float.greatestFiniteMagnitude)", decoder: _decoder) }.to(throwError())
-                            }
-                            it("FailsDecodingLessThanMin") {
-                                expect { _ = try Float.unbox("-1\(Float.greatestFiniteMagnitude)", decoder: _decoder) }.to(throwError())
-                            }
-                        }
+//                        context("ConvertFromStringStrategy") {
+//                            let decoder = XMLDecoder()
+//                            decoder.nonConformingFloatDecodingStrategy = .convertFromString(positiveInfinity: "10", negativeInfinity: "-10", nan: "-1")
+//                            let _decoder = mockDecoder(options: decoder.options)
+//                            it("Decodes'24.24'") {
+//                                expect { _ = try Float.unbox("24.24", decoder: _decoder) }.toNot(throwError())
+//                                let value = try! Float.unbox("24.24", decoder: _decoder)
+//                                expect(value) ≈ 24.24
+//                            }
+//                            it("Decodes'-24.24'") {
+//                                expect { _ = try Float.unbox("-24.24", decoder: _decoder) }.toNot(throwError())
+//                                let value = try! Float.unbox("-24.24", decoder: _decoder)
+//                                expect(value) ≈ -24.24
+//                            }
+//                            it("Decodes'infinity'") {
+//                                expect { _ = try Float.unbox("10", decoder: _decoder) }.toNot(throwError())
+//                                let value = try! Float.unbox("10", decoder: _decoder)
+//                                expect(value) == Float.infinity
+//                            }
+//                            it("Decodes'-infinity'") {
+//                                expect { _ = try Float.unbox("-10", decoder: _decoder) }.toNot(throwError())
+//                                let value = try! Float.unbox("-10", decoder: _decoder)
+//                                expect(value) == -Float.infinity
+//                            }
+//                            it("Decodes'nan'") {
+//                                expect { _ = try Float.unbox("-1", decoder: _decoder) }.toNot(throwError())
+//                                let value = try! Float.unbox("-1", decoder: _decoder)
+//                                expect(value).to(be(Float.nan))
+//                            }
+//                            it("FailsDecodingGreaterThanMax") {
+//                                expect { _ = try Float.unbox("1\(Float.greatestFiniteMagnitude)", decoder: _decoder) }.to(throwError())
+//                            }
+//                            it("FailsDecodingLessThanMin") {
+//                                expect { _ = try Float.unbox("-1\(Float.greatestFiniteMagnitude)", decoder: _decoder) }.to(throwError())
+//                            }
+//                        }
                     }
                     describe("Double") {
                         context("DefaultDecoder") {
@@ -107,42 +107,42 @@ class XMLDecodableDecimalTests: QuickSpec {
                                 expect { _ = try Double.unbox("-1\(Double.greatestFiniteMagnitude)", decoder: _decoder) }.to(throwError())
                             }
                         }
-                        context("ConvertFromStringStrategy") {
-                            let decoder = XMLDecoder()
-                            decoder.nonConformingFloatDecodingStrategy = .convertFromString(positiveInfinity: "10", negativeInfinity: "-10", nan: "-1")
-                            let _decoder = mockDecoder(options: decoder.options)
-                            it("Decodes'24.24'") {
-                                expect { _ = try Double.unbox("24.24", decoder: _decoder) }.toNot(throwError())
-                                let value = try! Double.unbox("24.24", decoder: _decoder)
-                                expect(value) ≈ 24.24
-                            }
-                            it("Decodes'-24.24'") {
-                                expect { _ = try Double.unbox("-24.24", decoder: _decoder) }.toNot(throwError())
-                                let value = try! Double.unbox("-24.24", decoder: _decoder)
-                                expect(value) ≈ -24.24
-                            }
-                            it("Decodes'infinity'") {
-                                expect { _ = try Double.unbox("10", decoder: _decoder) }.toNot(throwError())
-                                let value = try! Double.unbox("10", decoder: _decoder)
-                                expect(value) == Double.infinity
-                            }
-                            it("Decodes'-infinity'") {
-                                expect { _ = try Double.unbox("-10", decoder: _decoder) }.toNot(throwError())
-                                let value = try! Double.unbox("-10", decoder: _decoder)
-                                expect(value) == -Double.infinity
-                            }
-                            it("Decodes'nan'") {
-                                expect { _ = try Double.unbox("-1", decoder: _decoder) }.toNot(throwError())
-                                let value = try! Double.unbox("-1", decoder: _decoder)
-                                expect(value).to(be(Double.nan))
-                            }
-                            it("FailsDecodingGreaterThanMax") {
-                                expect { _ = try Double.unbox("1\(Double.greatestFiniteMagnitude)", decoder: _decoder) }.to(throwError())
-                            }
-                            it("FailsDecodingLessThanMin") {
-                                expect { _ = try Double.unbox("-1\(Double.greatestFiniteMagnitude)", decoder: _decoder) }.to(throwError())
-                            }
-                        }
+//                        context("ConvertFromStringStrategy") {
+//                            let decoder = XMLDecoder()
+//                            decoder.nonConformingFloatDecodingStrategy = .convertFromString(positiveInfinity: "10", negativeInfinity: "-10", nan: "-1")
+//                            let _decoder = mockDecoder(options: decoder.options)
+//                            it("Decodes'24.24'") {
+//                                expect { _ = try Double.unbox("24.24", decoder: _decoder) }.toNot(throwError())
+//                                let value = try! Double.unbox("24.24", decoder: _decoder)
+//                                expect(value) ≈ 24.24
+//                            }
+//                            it("Decodes'-24.24'") {
+//                                expect { _ = try Double.unbox("-24.24", decoder: _decoder) }.toNot(throwError())
+//                                let value = try! Double.unbox("-24.24", decoder: _decoder)
+//                                expect(value) ≈ -24.24
+//                            }
+//                            it("Decodes'infinity'") {
+//                                expect { _ = try Double.unbox("10", decoder: _decoder) }.toNot(throwError())
+//                                let value = try! Double.unbox("10", decoder: _decoder)
+//                                expect(value) == Double.infinity
+//                            }
+//                            it("Decodes'-infinity'") {
+//                                expect { _ = try Double.unbox("-10", decoder: _decoder) }.toNot(throwError())
+//                                let value = try! Double.unbox("-10", decoder: _decoder)
+//                                expect(value) == -Double.infinity
+//                            }
+//                            it("Decodes'nan'") {
+//                                expect { _ = try Double.unbox("-1", decoder: _decoder) }.toNot(throwError())
+//                                let value = try! Double.unbox("-1", decoder: _decoder)
+//                                expect(value).to(be(Double.nan))
+//                            }
+//                            it("FailsDecodingGreaterThanMax") {
+//                                expect { _ = try Double.unbox("1\(Double.greatestFiniteMagnitude)", decoder: _decoder) }.to(throwError())
+//                            }
+//                            it("FailsDecodingLessThanMin") {
+//                                expect { _ = try Double.unbox("-1\(Double.greatestFiniteMagnitude)", decoder: _decoder) }.to(throwError())
+//                            }
+//                        }
                         describe("Decimal") {
                             context("DefaultDecoder") {
                                 let _decoder = mockDecoder(options: mockOptions)
