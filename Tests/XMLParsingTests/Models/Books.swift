@@ -17,6 +17,15 @@ struct Catalog: Codable {
     }
 }
 
+struct BookDateCoder: CustomDateFormatterCoder {
+    static var dateFormatter: DateFormatter = {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            return formatter
+    }()
+    
+}
+
 struct Book: Codable, Equatable {
     @XMLAttributeProperty
     var id: String
@@ -25,9 +34,10 @@ struct Book: Codable, Equatable {
     let title: String
     let genre: Genre
     let price: Double
-    let publishDate: Date
+    @CustomCoding<DateCoders.Custom<BookDateCoder>>
+    var publishDate: Date
     
-    @XMLCDataProperty
+    @CustomCoding<XMLCDataCoder>
     var description: String
     
     enum CodingKeys: String, CodingKey {

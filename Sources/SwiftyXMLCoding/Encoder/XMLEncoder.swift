@@ -37,28 +37,28 @@ open class XMLEncoder {
     }
     
     /// The strategy to use for encoding `Date` values.
-    public enum DateEncodingStrategy {
-        /// Defer to `Date` for choosing an encoding. This is the default strategy.
-        case deferredToDate
-        
-        /// Encode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
-        @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
-        case iso8601
-        
-        /// Encode the `Date` as a string formatted by the given formatter.
-        case formatted(DateFormatter)
-        
-        /// Encode the `Date` as a custom value encoded by the given closure.
-        ///
-        /// If the closure fails to encode a value into the given encoder, the encoder will encode an empty automatic container in its place.
-        case custom((Date, Encoder) throws -> Void)
-        
-        /// Encode the `Date` as UNIX millisecond timestamp (as a XML number).
-        case millisecondsSince1970
-        
-        /// Encode the `Date` as a UNIX timestamp (as a XML number).
-        case secondsSince1970
-    }
+//    public enum DateEncodingStrategy {
+//        /// Defer to `Date` for choosing an encoding. This is the default strategy.
+//        case deferredToDate
+//
+//        /// Encode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
+//        @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
+//        case iso8601
+//
+//        /// Encode the `Date` as a string formatted by the given formatter.
+//        case formatted(DateFormatter)
+//
+//        /// Encode the `Date` as a custom value encoded by the given closure.
+//        ///
+//        /// If the closure fails to encode a value into the given encoder, the encoder will encode an empty automatic container in its place.
+//        case custom((Date, Encoder) throws -> Void)
+//
+//        /// Encode the `Date` as UNIX millisecond timestamp (as a XML number).
+//        case millisecondsSince1970
+//
+//        /// Encode the `Date` as a UNIX timestamp (as a XML number).
+//        case secondsSince1970
+//    }
     
     /// The strategy to use for encoding `Data` values.
     public enum DataEncodingStrategy {
@@ -164,7 +164,7 @@ open class XMLEncoder {
     open var outputFormatting: OutputFormatting = []
     
     /// The strategy to use in encoding dates. Defaults to `.deferredToDate`.
-    open var dateEncodingStrategy: DateEncodingStrategy = .deferredToDate
+//    open var dateEncodingStrategy: DateEncodingStrategy = .deferredToDate
     
     /// The strategy to use in encoding binary data. Defaults to `.base64`.
     open var dataEncodingStrategy: DataEncodingStrategy = .base64
@@ -180,7 +180,7 @@ open class XMLEncoder {
     
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     internal struct _Options {
-        let dateEncodingStrategy: DateEncodingStrategy
+//        let dateEncodingStrategy: DateEncodingStrategy
         let dataEncodingStrategy: DataEncodingStrategy
         let nonConformingFloatEncodingStrategy: NonConformingFloatEncodingStrategy
         let keyEncodingStrategy: KeyEncodingStrategy
@@ -189,7 +189,8 @@ open class XMLEncoder {
     
     /// The options set on the top-level encoder.
     internal var options: _Options {
-        return _Options(dateEncodingStrategy: dateEncodingStrategy,
+        return _Options(
+//            dateEncodingStrategy: dateEncodingStrategy,
                         dataEncodingStrategy: dataEncodingStrategy,
                         nonConformingFloatEncodingStrategy: nonConformingFloatEncodingStrategy,
                         keyEncodingStrategy: keyEncodingStrategy,
@@ -591,11 +592,13 @@ extension XMLAttributeProperty: XMLEncodable where T: XMLEncodable {
     func encodeAsAny(encoder: _XMLEncoder) throws -> Any { try wrappedValue.encodeAsAny(encoder: encoder) }
 }
 
-extension XMLCDataProperty: XMLEncodable  {
-    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "<![CDATA[\(wrappedValue)]]>" }
-}
 extension String: XMLEncodable {
-    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self.escape(_XMLElement.escapedCharacterSet))" }
+    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
+        guard !starts(with: "<![CDATA[") else {
+            return self
+        }
+        return self.escape(_XMLElement.escapedCharacterSet)
+    }
 }
 
 extension Bool: XMLEncodable { func encodeAsAny(encoder: _XMLEncoder) throws -> Any { "\(self)" } }
@@ -629,37 +632,38 @@ extension Double: XMLEncodable {
     }
 }
 
-extension Date: XMLEncodable {
-    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
-        switch encoder.options.dateEncodingStrategy {
-        case .deferredToDate:
-            try self.encode(to: encoder)
-            return encoder.storage.popContainer()
-        case .secondsSince1970:
-            return "\(timeIntervalSince1970)"
-        case .millisecondsSince1970:
-            return "\(timeIntervalSince1970 * 1000.0)"
-        case .iso8601:
-            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
-                return _iso8601Formatter.string(from: self) as AnyObject
-            } else {
-                fatalError("ISO8601DateFormatter is unavailable on this platform.")
-            }
-        case .formatted(let formatter):
-            return formatter.string(from: self) as AnyObject
-        case .custom(let closure):
-            let depth = encoder.storage.count
-            try closure(self, encoder)
-
-            guard encoder.storage.count > depth else { return [String:Any]() }
-
-            return encoder.storage.popContainer()
-        }
-    }
-}
-extension NSDate: XMLEncodable {
-    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { return try (self as Date).encodeAsAny(encoder: encoder) }
-}
+//extension Date: XMLEncodable {
+//    func encodeAsAny(encoder: _XMLEncoder) throws -> Any {
+//        switch encoder.options.dateEncodingStrategy {
+//        case .deferredToDate:
+//            try self.encode(to: encoder)
+//            return encoder.storage.popContainer()
+//        case .secondsSince1970:
+//            return "\(timeIntervalSince1970)"
+//        case .millisecondsSince1970:
+//            return try DateCoders.MillisecondsSince1970.encodeAsString(date: self)
+////            return "\(timeIntervalSince1970 * 1000.0)"
+//        case .iso8601:
+//            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
+//                return _iso8601Formatter.string(from: self) as AnyObject
+//            } else {
+//                fatalError("ISO8601DateFormatter is unavailable on this platform.")
+//            }
+//        case .formatted(let formatter):
+//            return formatter.string(from: self) as AnyObject
+//        case .custom(let closure):
+//            let depth = encoder.storage.count
+//            try closure(self, encoder)
+//
+//            guard encoder.storage.count > depth else { return [String:Any]() }
+//
+//            return encoder.storage.popContainer()
+//        }
+//    }
+//}
+//extension NSDate: XMLEncodable {
+//    func encodeAsAny(encoder: _XMLEncoder) throws -> Any { return try (self as Date).encodeAsAny(encoder: encoder) }
+//}
 
 extension Data: XMLEncodable {
     func encodeAsAny(encoder: _XMLEncoder) throws -> Any {

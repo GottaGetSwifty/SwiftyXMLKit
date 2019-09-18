@@ -16,50 +16,50 @@ import Foundation
 open class XMLDecoder {
     // MARK: Options
     /// The strategy to use for decoding `Date` values.
-    public enum DateDecodingStrategy {
-        /// Defer to `Date` for decoding. This is the default strategy.
-        case deferredToDate
-        
-        /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
-        @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
-        case iso8601
-        
-        /// Decode the `Date` as a string parsed by the given formatter.
-        case formatted(DateFormatter)
-        
-        /// Decode the `Date` as a custom value decoded by the given closure.
-        case custom((_ decoder: Decoder) throws -> Date)
-        
-        /// Decode the `Date` as UNIX millisecond timestamp from a XML number.
-        case millisecondsSince1970
-        
-        /// Decode the `Date` as a UNIX timestamp from a XML number. This is the default strategy.
-        case secondsSince1970
-        
-        /// Decode the `Date` as a string parsed by the given formatter for the give key.
-        static func keyFormatted(_ formatterForKey: @escaping (CodingKey) throws -> DateFormatter?) -> XMLDecoder.DateDecodingStrategy {
-            return .custom({ (decoder) -> Date in
-                guard let codingKey = decoder.codingPath.last else {
-                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "No Coding Path Found"))
-                }
-                
-                guard let container = try? decoder.singleValueContainer(),
-                    let text = try? container.decode(String.self) else {
-                        throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Could not decode date text"))
-                }
-                
-                guard let dateFormatter = try formatterForKey(codingKey) else {
-                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "No date formatter for date text")
-                }
-                
-                if let date = dateFormatter.date(from: text) {
-                    return date
-                } else {
-                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(text)")
-                }
-            })
-        }
-    }
+//    public enum DateDecodingStrategy {
+//        /// Defer to `Date` for decoding. This is the default strategy.
+//        case deferredToDate
+//
+//        /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
+//        @available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
+//        case iso8601
+//
+//        /// Decode the `Date` as a string parsed by the given formatter.
+//        case formatted(DateFormatter)
+//
+//        /// Decode the `Date` as a custom value decoded by the given closure.
+//        case custom((_ decoder: Decoder) throws -> Date)
+//
+//        /// Decode the `Date` as UNIX millisecond timestamp from a XML number.
+//        case millisecondsSince1970
+//
+//        /// Decode the `Date` as a UNIX timestamp from a XML number. This is the default strategy.
+//        case secondsSince1970
+//
+//        /// Decode the `Date` as a string parsed by the given formatter for the give key.
+//        static func keyFormatted(_ formatterForKey: @escaping (CodingKey) throws -> DateFormatter?) -> XMLDecoder.DateDecodingStrategy {
+//            return .custom({ (decoder) -> Date in
+//                guard let codingKey = decoder.codingPath.last else {
+//                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "No Coding Path Found"))
+//                }
+//
+//                guard let container = try? decoder.singleValueContainer(),
+//                    let text = try? container.decode(String.self) else {
+//                        throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Could not decode date text"))
+//                }
+//
+//                guard let dateFormatter = try formatterForKey(codingKey) else {
+//                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "No date formatter for date text")
+//                }
+//
+//                if let date = dateFormatter.date(from: text) {
+//                    return date
+//                } else {
+//                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(text)")
+//                }
+//            })
+//        }
+//    }
     
     /// The strategy to use for decoding `Data` values.
     public enum DataDecodingStrategy {
@@ -173,7 +173,7 @@ open class XMLDecoder {
     }
     
     /// The strategy to use in decoding dates. Defaults to `.secondsSince1970`.
-    open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
+//    open var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
     
     /// The strategy to use in decoding binary data. Defaults to `.base64`.
     open var dataDecodingStrategy: DataDecodingStrategy = .base64
@@ -189,7 +189,7 @@ open class XMLDecoder {
     
     /// Options set on the top-level encoder to pass down the decoding hierarchy.
     internal struct _Options {
-        let dateDecodingStrategy: DateDecodingStrategy
+//        let dateDecodingStrategy: DateDecodingStrategy
         let dataDecodingStrategy: DataDecodingStrategy
         let nonConformingFloatDecodingStrategy: NonConformingFloatDecodingStrategy
         let keyDecodingStrategy: KeyDecodingStrategy
@@ -198,7 +198,8 @@ open class XMLDecoder {
     
     /// The options set on the top-level decoder.
     internal var options: _Options {
-        return _Options(dateDecodingStrategy: dateDecodingStrategy,
+        return _Options(
+//            dateDecodingStrategy: dateDecodingStrategy,
                         dataDecodingStrategy: dataDecodingStrategy,
                         nonConformingFloatDecodingStrategy: nonConformingFloatDecodingStrategy,
                         keyDecodingStrategy: keyDecodingStrategy,
@@ -609,77 +610,75 @@ extension String: XMLDecodable {
     }
 }
 
-extension Date: XMLDecodable {
-    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Date {
-        
-        switch decoder.options.dateDecodingStrategy {
-        case .deferredToDate:
-            decoder.storage.push(container: value)
-            defer { decoder.storage.popContainer() }
-            return try Date(from: decoder)
-
-        case .secondsSince1970:
-            let double: Double = try Double.unbox(value, decoder: decoder)
-            return Date(timeIntervalSince1970: double)
-            
-        case .millisecondsSince1970:
-            let double: Double = try Double.unbox(value, decoder: decoder)
-            return Date(timeIntervalSince1970: double / 1000.0)
-            
-        case .iso8601:
-            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
-                let string: String = try String.unbox(value, decoder: decoder)
-                guard let date = _iso8601Formatter.date(from: string) else {
-                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Expected date string to be ISO8601-formatted."))
-                }
-                
-                return date
-            } else {
-                fatalError("ISO8601DateFormatter is unavailable on this platform.")
-            }
-            
-        case .formatted(let formatter):
-            let string: String = try String.unbox(value, decoder: decoder)
-            guard let date = formatter.date(from: string) else {
-                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Date string does not match format expected by formatter."))
-            }
-            
-            return date
-            
-        case .custom(let closure):
-            decoder.storage.push(container: value)
-            defer { decoder.storage.popContainer() }
-            return try closure(decoder)
-        }
-    }
-}
-extension NSDate: XMLDecodable {
-    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Self {
-        let date = try Date.unbox(value, decoder: decoder)
-        return Self(timeIntervalSince1970: date.timeIntervalSince1970)
-    }
-}
-
+//extension Date: XMLDecodable {
+//    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Date {
+//        
+//        switch decoder.options.dateDecodingStrategy {
+//        case .deferredToDate:
+//            decoder.storage.push(container: value)
+//            defer { decoder.storage.popContainer() }
+//            return try Date(from: decoder)
+//
+//        case .secondsSince1970:
+//            let double: Double = try Double.unbox(value, decoder: decoder)
+//            return Date(timeIntervalSince1970: double)
+//            
+//        case .millisecondsSince1970:
+//            return try DateCoders.MillisecondsSince1970.decode(from: decoder)
+//        case .iso8601:
+//            if #available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
+//                let string: String = try String.unbox(value, decoder: decoder)
+//                guard let date = _iso8601Formatter.date(from: string) else {
+//                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Expected date string to be ISO8601-formatted."))
+//                }
+//                
+//                return date
+//            } else {
+//                fatalError("ISO8601DateFormatter is unavailable on this platform.")
+//            }
+//            
+//        case .formatted(let formatter):
+//            let string: String = try String.unbox(value, decoder: decoder)
+//            guard let date = formatter.date(from: string) else {
+//                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Date string does not match format expected by formatter."))
+//            }
+//            
+//            return date
+//            
+//        case .custom(let closure):
+//            decoder.storage.push(container: value)
+//            defer { decoder.storage.popContainer() }
+//            return try closure(decoder)
+//        }
+//    }
+//}
+//extension NSDate: XMLDecodable {
+//    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Self {
+//        let date = try Date.unbox(value, decoder: decoder)
+//        return Self(timeIntervalSince1970: date.timeIntervalSince1970)
+//    }
+//}
+//
 extension Data: XMLDecodable {
     static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> Data {
-        
+
         switch decoder.options.dataDecodingStrategy {
         case .deferredToData:
             decoder.storage.push(container: value)
             defer { decoder.storage.popContainer() }
             return try Data(from: decoder)
-            
+
         case .base64:
             guard let string = value as? String else {
                 throw DecodingError._typeMismatch(at: decoder.codingPath, expectation: Data.self, reality: value)
             }
-            
+
             guard let data = Data(base64Encoded: string) else {
                 throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Encountered Data is not valid Base64."))
             }
-            
+
             return data
-            
+
         case .custom(let closure):
             decoder.storage.push(container: value)
             defer { decoder.storage.popContainer() }
@@ -715,12 +714,5 @@ extension NSURL: XMLDecodable {
 extension XMLAttributeProperty: XMLDecodable where T: XMLDecodable {
     static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> XMLAttributeProperty<T> {
         return XMLAttributeProperty<T>(wrappedValue: try T.unbox(value, decoder: decoder))
-    }
-}
-
-extension XMLCDataProperty: XMLDecodable {
-    static func unbox(_ value: Any, decoder: _XMLDecoder) throws -> XMLCDataProperty {
-        // The XML Parser converts CData to a normal String, so we don't need to do anything special
-        return XMLCDataProperty(wrappedValue: try String.unbox(value, decoder: decoder))
     }
 }

@@ -20,12 +20,12 @@ class BookTests: QuickSpec {
     
     let encoder: XMLEncoder = {
         let encoder = XMLEncoder()
-        encoder.dateEncodingStrategy = .formatted(formatter)
+//        encoder.dateEncodingStrategy = .formatted(formatter)
         return encoder
     }()
     let decoder: XMLDecoder = {
         let decoder = XMLDecoder()
-        decoder.dateDecodingStrategy = .formatted(formatter)
+//        decoder.dateDecodingStrategy = .formatted(formatter)
         return decoder
     }()
     
