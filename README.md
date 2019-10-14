@@ -22,13 +22,13 @@ If you're working directly in a Package, add SwiftyXMLKit to your Package.swift 
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/PeeJWeeJ/SwiftyXMLKit.git", .upToNextMajor(from: "0.6.0-beta" )),
+    .package(url: "https://github.com/GottaGetSwifty/SwiftyXMLKit.git", .upToNextMajor(from: "0.6.0-beta" )),
 ]
 ```
 
 If working in an Xcode project select `File->Swift Packages->Add Package Dependency...` and search for the package name: `SwiftyXMLKit` or the git url:
 
-`https://github.com/PeeJWeeJ/SwiftyXMLKit.git`
+`https://github.com/GottaGetSwifty/SwiftyXMLKit.git`
 
 # SwiftyXMLCoding
 
